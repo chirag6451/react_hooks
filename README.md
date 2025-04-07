@@ -6,7 +6,7 @@
 ![Git Hooks](https://img.shields.io/badge/Git-Hooks-F05032?style=for-the-badge&logo=git)
 ![Node.js](https://img.shields.io/badge/Node.js-14+-339933?style=for-the-badge&logo=node.js)
 
-**Enforce React builds, secure .gitignore patterns, and lowercase naming conventions before commits**
+**Enforce React builds, secure .gitignore patterns, and suggest lowercase naming conventions before commits**
 
 </div>
 
@@ -38,12 +38,13 @@ Pre-commit hooks act like a gatekeeper to your codebase. They help catch issues 
 - node_modules/ is huge and shouldn't be versioned.
 - Accidentally committing npm_install or build output clutters the repo.
 
-### 3. 🔍 Lowercase Enforcement
-✅ **Purpose**: Ensure all file names and import statements use lowercase for consistency across your codebase.
+### 3. 🔍 Lowercase Suggestions
+✅ **Purpose**: Suggest using lowercase for all file names and import statements for consistency across your codebase.
 
 **Why it matters**:
 - Prevents issues on case-sensitive systems.
 - Maintains consistent naming conventions across your codebase.
+- Provides helpful warnings without blocking your workflow.
 
 ## Overview
 
@@ -51,7 +52,7 @@ React Build Git Hooks is a powerful, zero-configuration solution that enforces t
 
 1. **Build Verification**: Automatically builds all React apps in your repository before commits/pushes to catch build errors early
 2. **Security Checks**: Ensures sensitive files (like `.env`, `node_modules`) are properly added to `.gitignore`
-3. **Lowercase Enforcement**: Ensures all file names and import statements use lowercase for consistency across your codebase
+3. **Lowercase Suggestions**: Provides friendly warnings when file names and import statements don't use lowercase, without blocking your workflow
 
 This helps teams maintain high-quality code and prevents accidental exposure of sensitive information.
 
@@ -60,8 +61,8 @@ This helps teams maintain high-quality code and prevents accidental exposure of 
 - **Auto-detection**: Automatically finds all React apps in your repository
 - **Smart Building**: Runs the appropriate build command for each app (`build:dev` or `build`)
 - **Security**: Checks and updates `.gitignore` to include sensitive files and directories
-- **Lowercase Enforcement**: Ensures all file names and import statements use lowercase
-- **Prevention**: Blocks commits/pushes if any build fails or if lowercase naming conventions are not followed
+- **Lowercase Suggestions**: Provides friendly warnings for non-lowercase file names and import statements
+- **Prevention**: Blocks commits/pushes if any build fails
 - **Easy Distribution**: Simple to install and share with your team
 - **Cross-Platform**: Works on macOS, Linux, and Windows
 
@@ -229,7 +230,7 @@ After the gitignore check, the hook:
 2. For each React app, runs either `npm run build:dev` or `npm run build` (preferring build:dev if available)
 3. If any build fails, prevents the commit/push with a helpful error message
 
-### 3. Lowercase Enforcement
+### 3. Lowercase Suggestions
 
 After the build check, the hook:
 
@@ -238,7 +239,7 @@ After the build check, the hook:
 </div>
 
 1. Scans your repository for file names and import statements that do not use lowercase
-2. If any are found, prevents the commit/push with a helpful error message
+2. If any are found, provides helpful warnings but allows the commit to proceed
 
 ## Team Distribution
 

@@ -3,6 +3,7 @@
 /**
  * This script checks that all staged files have lowercase names
  * and all import statements use lowercase paths
+ * It will warn but not block commits
  */
 
 // Module-agnostic imports (works in both CommonJS and ES Module environments)
@@ -59,8 +60,8 @@ const requireOrImport = async (moduleName) => {
     /dynamic\s*\(\s*['"](.+)['"]\s*\)/g            // dynamic('path') (Next.js)
   ];
 
-  let hasErrors = false;
-  const errors = {
+  let hasWarnings = false;
+  const warnings = {
     fileNames: [],
     imports: []
   };
@@ -79,8 +80,8 @@ const requireOrImport = async (moduleName) => {
     
     // Check if file name contains uppercase letters
     if (fileName !== fileName.toLowerCase()) {
-      errors.fileNames.push(file);
-      hasErrors = true;
+      warnings.fileNames.push(file);
+      hasWarnings = true;
     }
     
     // Check import statements in code files
@@ -103,11 +104,11 @@ const requireOrImport = async (moduleName) => {
               continue;
             }
             
-            errors.imports.push({
+            warnings.imports.push({
               file,
               importPath
             });
-            hasErrors = true;
+            hasWarnings = true;
           }
         }
       } catch (error) {
@@ -116,31 +117,30 @@ const requireOrImport = async (moduleName) => {
     }
   }
 
-  // Report errors
-  if (hasErrors) {
-    console.error('❌ Found files that do not follow lowercase naming convention:');
+  // Report warnings
+  if (hasWarnings) {
+    console.warn('⚠️ WARNING: Found files that do not follow lowercase naming convention:');
     
-    if (errors.fileNames.length > 0) {
-      console.error('\n📁 Files with uppercase names:');
-      errors.fileNames.forEach(file => {
-        console.error(`  - ${file}`);
+    if (warnings.fileNames.length > 0) {
+      console.warn('\n📁 Files with uppercase names:');
+      warnings.fileNames.forEach(file => {
+        console.warn(`  - ${file}`);
       });
     }
     
-    if (errors.imports.length > 0) {
-      console.error('\n📦 Files with uppercase import paths:');
-      errors.imports.forEach(({ file, importPath }) => {
-        console.error(`  - ${file}: import path "${importPath}"`);
+    if (warnings.imports.length > 0) {
+      console.warn('\n📦 Files with uppercase import paths:');
+      warnings.imports.forEach(({ file, importPath }) => {
+        console.warn(`  - ${file}: import path "${importPath}"`);
       });
     }
     
-    console.error('\n⚠️ Please rename these files and update import statements to use lowercase.');
-    console.error('You can bypass this check with git commit --no-verify, but this is not recommended.');
-    process.exit(1);
+    console.warn('\n⚠️ Consider renaming these files and updating import statements to use lowercase.');
+    console.warn('This is just a warning and will not prevent your commit.');
   } else {
     console.log('✅ All file names and import statements follow lowercase convention.');
   }
 })().catch(error => {
   console.error('❌ Error:', error.message);
-  process.exit(1);
+  // Don't exit with error code to allow commit to proceed
 });
