@@ -3,75 +3,85 @@
 # React Build Git Hooks Updater
 # This script updates the React Build Git Hooks to the latest version
 
+# Set variables
+REPO_URL="https://github.com/chirag6451/react_hooks.git"
+TARGET_DIR="$(pwd)"
+TEMP_DIR=$(mktemp -d)
+
+# Function to clean up temporary files
+cleanup() {
+  echo "Cleaning up temporary files..."
+  rm -rf "$TEMP_DIR"
+}
+
+# Set trap to clean up on exit
+trap cleanup EXIT
+
+# Check if current directory is a git repository
+if [ ! -d ".git" ]; then
+  echo "❌ Error: Current directory is not a git repository."
+  echo "Please run this script from the root of your git repository."
+  exit 1
+fi
+
+# Print header
 echo "🔄 React Build Git Hooks Updater"
 echo "======================================"
-
-# Check if git is initialized
-if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-    echo "❌ ERROR: This directory is not a Git repository."
-    echo "Please run this script from a Git repository."
-    exit 1
-fi
-
-# Check if Node.js is installed
-if ! command -v node &> /dev/null; then
-    echo "❌ ERROR: Node.js is not installed or not in PATH."
-    exit 1
-fi
-
-# Create a temporary directory for the update
-temp_dir=$(mktemp -d)
-echo -e "\n📥 Downloading the latest version..."
+echo
 
 # Clone the latest version
-if ! git clone https://github.com/chirag6451/react_hooks.git "$temp_dir"; then
-    echo "❌ Failed to download the latest version."
-    rm -rf "$temp_dir"
-    exit 1
+echo "📥 Downloading the latest version..."
+git clone --quiet "$REPO_URL" "$TEMP_DIR" || {
+  echo "❌ Error: Failed to download the latest version."
+  exit 1
+}
+
+# Check if pre-commit hook exists
+if [ -f ".husky/pre-commit" ]; then
+  echo "🔍 Detected pre-commit hook in use."
+else
+  echo "❌ Error: No pre-commit hook found."
+  echo "Please run the installation script first."
+  exit 1
 fi
 
-# Check which hook type is currently used
-current_hook_type="pre-commit"
-if [ -f ".husky/pre-push" ]; then
-    current_hook_type="pre-push"
+echo
+echo "📝 Updating scripts..."
+
+# Check if this is an ES modules project
+is_esm=false
+if [ -f "package.json" ]; then
+  if grep -q '"type":\s*"module"' package.json; then
+    is_esm=true
+    echo "📦 Detected ES modules project"
+  fi
 fi
-
-echo -e "\n🔍 Detected $current_hook_type hook in use."
-
-# Update the scripts
-echo -e "\n📝 Updating scripts..."
 
 # Create scripts directory if it doesn't exist
 mkdir -p scripts
 
-# Check if we're using ES modules
-is_esm=false
-if [ -f "package.json" ] && grep -q '"type": "module"' package.json; then
-    is_esm=true
-    echo "📦 Detected ES modules project"
-fi
-
-# Copy scripts
-mkdir -p scripts
-cp -f "$temp_dir/scripts/build-react-apps.js" "scripts/"
-cp -f "$temp_dir/scripts/check-gitignore.js" "scripts/"
-cp -f "$temp_dir/scripts/check-lowercase.js" "scripts/"
-cp -f "$temp_dir/scripts/git-reminder.js" "scripts/"
-
-# Copy templates
+# Create templates directory if it doesn't exist
 mkdir -p templates
-cp -f "$temp_dir/templates/pre-commands.js" "templates/"
+
+# Copy scripts from the temp directory
+cp -f "$TEMP_DIR/scripts/build-react-apps.js" "scripts/"
+cp -f "$TEMP_DIR/scripts/check-gitignore.js" "scripts/"
+cp -f "$TEMP_DIR/scripts/check-lowercase.js" "scripts/"
+cp -f "$TEMP_DIR/scripts/git-reminder.js" "scripts/"
+
+# Copy templates from the temp directory
+cp -f "$TEMP_DIR/templates/pre-commands.js" "templates/"
 
 # Copy configuration files (don't overwrite existing ones)
 if [ ! -f "hooks-config.js" ]; then
-  cp -f "$temp_dir/hooks-config.js" "."
+  cp -f "$TEMP_DIR/hooks-config.js" "./"
   echo "✅ Created hooks-config.js configuration file"
 else
   echo "ℹ️ Existing hooks-config.js file preserved"
 fi
 
 if [ ! -f "hooks-config.mjs" ]; then
-  cp -f "$temp_dir/hooks-config.mjs" "."
+  cp -f "$TEMP_DIR/hooks-config.mjs" "./"
   echo "✅ Created hooks-config.mjs configuration file"
 else
   echo "ℹ️ Existing hooks-config.mjs file preserved"
@@ -85,70 +95,73 @@ chmod +x "scripts/git-reminder.js"
 
 # Update package.json scripts
 if [ -f "package.json" ]; then
-    echo -e "\n📝 Updating package.json scripts..."
+  echo
+  echo "📝 Updating package.json scripts..."
+  
+  # Check if jq is available
+  if command -v jq &> /dev/null; then
+    # Use jq to update package.json
+    jq '.scripts["check-gitignore"] = "node scripts/check-gitignore.js"' package.json > package.json.tmp && mv package.json.tmp package.json
+    jq '.scripts["check-lowercase"] = "node scripts/check-lowercase.js"' package.json > package.json.tmp && mv package.json.tmp package.json
+    jq '.scripts["git-reminder"] = "node scripts/git-reminder.js"' package.json > package.json.tmp && mv package.json.tmp package.json
+  else
+    # Fallback to sed if jq is not available
+    # This is less reliable but should work for most cases
+    if ! grep -q '"check-gitignore":' package.json; then
+      sed -i.bak 's/"scripts": {/"scripts": {\n    "check-gitignore": "node scripts\/check-gitignore.js",/' package.json && rm -f package.json.bak
+    fi
     
-    # Create a temporary file for the new package.json
-    tmp_file=$(mktemp)
+    if ! grep -q '"check-lowercase":' package.json; then
+      sed -i.bak 's/"scripts": {/"scripts": {\n    "check-lowercase": "node scripts\/check-lowercase.js",/' package.json && rm -f package.json.bak
+    fi
     
-    # Use node to modify package.json
-    node -e "
-        const fs = require('fs');
-        const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-        
-        if (!packageJson.scripts) {
-            packageJson.scripts = {};
-        }
-        
-        // Update scripts
-        packageJson.scripts['check-gitignore'] = 'node scripts/check-gitignore.js';
-        packageJson.scripts['check-lowercase'] = 'node scripts/check-lowercase.js';
-        packageJson.scripts['git-reminder'] = 'node scripts/git-reminder.js';
-        
-        // Remove build:dev script if it exists (to prevent infinite loop)
-        if (packageJson.scripts['build:dev']) {
-            delete packageJson.scripts['build:dev'];
-            console.log('✅ Removed build:dev script to prevent infinite loop');
-        }
-        
-        fs.writeFileSync('$tmp_file', JSON.stringify(packageJson, null, 2));
-    "
-    
-    # Replace the original package.json with the updated one
-    mv "$tmp_file" "package.json"
-    echo "✅ Updated package.json scripts"
+    if ! grep -q '"git-reminder":' package.json; then
+      sed -i.bak 's/"scripts": {/"scripts": {\n    "git-reminder": "node scripts\/git-reminder.js",/' package.json && rm -f package.json.bak
+    fi
+  fi
+  
+  echo "✅ Updated package.json scripts"
 fi
 
-# Update the hook
-echo -e "\n📝 Updating $current_hook_type hook..."
-cat > ".husky/$current_hook_type" << 'EOF'
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+# Update pre-commit hook
+echo
+echo "📝 Updating pre-commit hook..."
 
-# Check .gitignore for sensitive files
-npm run check-gitignore
+# Check if the pre-commit hook already includes our scripts
+if ! grep -q "check-gitignore" .husky/pre-commit || ! grep -q "check-lowercase" .husky/pre-commit || ! grep -q "git-reminder" .husky/pre-commit; then
+  # Add our scripts to the pre-commit hook
+  sed -i.bak '/npm test/d' .husky/pre-commit
+  
+  if ! grep -q "check-gitignore" .husky/pre-commit; then
+    echo -e "\n# Check .gitignore for sensitive files\nnpm run check-gitignore" >> .husky/pre-commit
+  fi
+  
+  if ! grep -q "check-lowercase" .husky/pre-commit; then
+    echo -e "\n# Check for lowercase file names and import statements\nnpm run check-lowercase" >> .husky/pre-commit
+  fi
+  
+  if ! grep -q "build-react-apps" .husky/pre-commit && ! grep -q "npm run build" .husky/pre-commit; then
+    echo -e "\n# Run build for React apps directly\nnpm run build" >> .husky/pre-commit
+  fi
+  
+  if ! grep -q "git-reminder" .husky/pre-commit; then
+    echo -e "\n# Run git reminder\nnpm run git-reminder" >> .husky/pre-commit
+  fi
+  
+  rm -f .husky/pre-commit.bak
+fi
 
-# Check for lowercase file names and import statements
-npm run check-lowercase
+echo "✅ Updated pre-commit hook"
 
-# Run build for React apps directly
-npm run build
-
-# Run git reminder
-npm run git-reminder
-EOF
-
-# Make the hook executable
-chmod +x ".husky/$current_hook_type"
-echo "✅ Updated $current_hook_type hook"
-
-# Clean up
-rm -rf "$temp_dir"
-
-echo -e "\n🎉 React Build Git Hooks have been updated to the latest version!"
-echo -e "\nChanges in this update:"
+# Success message
+echo
+echo "🎉 React Build Git Hooks have been updated to the latest version!"
+echo
+echo "Changes in this update:"
 echo "- Fixed infinite build loop issue"
 echo "- Added Husky v10 compatibility"
 echo "- Improved error handling"
 echo "- Added lowercase naming suggestions"
 echo "- Added Git reminder feature"
+echo "- Added configurable hooks system"
 echo "- Added uninstallation options"

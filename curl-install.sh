@@ -1,78 +1,71 @@
 #!/bin/bash
 
-# React Build Hooks - Curl Installer
-# This script can be run with:
-# curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/curl-install.sh | bash
+# React Build Git Hooks Installer
+# This script installs the React Build Git Hooks to your project
 
-echo "==================================================="
-echo " React Build Hooks - Curl Installer"
-echo "==================================================="
-echo ""
+# Set variables
+REPO_URL="https://github.com/chirag6451/react_hooks.git"
+TEMP_DIR=$(mktemp -d)
+
+# Function to clean up temporary files
+cleanup() {
+  echo "Cleaning up temporary files..."
+  rm -rf "$TEMP_DIR"
+}
+
+# Set trap to clean up on exit
+trap cleanup EXIT
+
+# Check if current directory is a git repository
+if [ ! -d ".git" ]; then
+  echo "❌ Error: Current directory is not a git repository."
+  echo "Please run this script from the root of your git repository."
+  exit 1
+fi
 
 # Check if Node.js is installed
 if ! command -v node &> /dev/null; then
-    echo "❌ ERROR: Node.js is not installed or not in PATH."
-    echo "Please install Node.js from https://nodejs.org/"
-    exit 1
+  echo "❌ Error: Node.js is not installed or not in PATH."
+  exit 1
 fi
-echo "✅ Node.js detected: $(node -v)"
 
-# Check if Git is installed
-if ! command -v git &> /dev/null; then
-    echo "❌ ERROR: Git is not installed or not in PATH."
-    echo "Please install Git from https://git-scm.com/"
-    exit 1
+# Print header
+echo "🚀 React Build Git Hooks Installer"
+echo "======================================"
+echo
+
+# Check if husky is installed
+if [ ! -d "node_modules/husky" ] && ! grep -q "husky" package.json; then
+  echo "📦 Installing husky..."
+  npm install husky --save-dev
+  npx husky init
+else
+  echo "✅ Husky is already installed."
 fi
-echo "✅ Git detected: $(git --version)"
 
-# Check if running in a Git repository
-if ! git rev-parse --is-inside-work-tree &> /dev/null; then
-    echo "❌ ERROR: Not in a Git repository."
-    echo "Please run this script from within a Git repository."
-    exit 1
-fi
-echo "✅ Git repository detected"
-
-# Check if package.json exists
-if [ ! -f "package.json" ]; then
-    echo "❌ ERROR: No package.json found."
-    echo "Please run this script from the root of a Node.js project."
-    exit 1
-fi
-echo "✅ package.json detected"
-
-# Create a temporary directory for the hooks
-temp_dir=$(mktemp -d)
-echo -e "\nCreating temporary directory: $temp_dir"
-
-# Download the necessary files
+# Clone the repository
 echo "📥 Downloading scripts..."
+git clone --quiet "$REPO_URL" "$TEMP_DIR" || {
+  echo "❌ Error: Failed to download the scripts."
+  exit 1
+}
 
-# Download the scripts
-echo "📥 Downloading scripts..."
-REPO_URL="https://raw.githubusercontent.com/chirag6451/react_hooks/main"
-curl -s "$REPO_URL/scripts/build-react-apps.js" -o "$temp_dir/scripts/build-react-apps.js"
-curl -s "$REPO_URL/scripts/check-gitignore.js" -o "$temp_dir/scripts/check-gitignore.js"
-curl -s "$REPO_URL/scripts/check-lowercase.js" -o "$temp_dir/scripts/check-lowercase.js"
-curl -s "$REPO_URL/scripts/git-reminder.js" -o "$temp_dir/scripts/git-reminder.js"
-curl -s "$REPO_URL/templates/pre-commands.js" -o "$temp_dir/templates/pre-commands.js"
-curl -s "$REPO_URL/hooks-config.js" -o "$temp_dir/hooks-config.js"
-curl -s "$REPO_URL/hooks-config.mjs" -o "$temp_dir/hooks-config.mjs"
+# Create directories
+mkdir -p scripts
+mkdir -p templates
 
 # Copy scripts
-mkdir -p scripts
-cp -f "$temp_dir/scripts/build-react-apps.js" scripts/
-cp -f "$temp_dir/scripts/check-gitignore.js" scripts/
-cp -f "$temp_dir/scripts/check-lowercase.js" scripts/
-cp -f "$temp_dir/scripts/git-reminder.js" scripts/
+cp -f "$TEMP_DIR/scripts/build-react-apps.js" "scripts/"
+cp -f "$TEMP_DIR/scripts/check-gitignore.js" "scripts/"
+cp -f "$TEMP_DIR/scripts/check-lowercase.js" "scripts/"
+cp -f "$TEMP_DIR/scripts/git-reminder.js" "scripts/"
 
 # Copy templates
-mkdir -p templates
-cp -f "$temp_dir/templates/pre-commands.js" templates/
+cp -f "$TEMP_DIR/templates/pre-commands.js" "templates/"
 
 # Copy configuration files
-cp -f "$temp_dir/hooks-config.js" ./
-cp -f "$temp_dir/hooks-config.mjs" ./
+cp -f "$TEMP_DIR/hooks-config.js" "./"
+cp -f "$TEMP_DIR/hooks-config.mjs" "./"
 
 # Make scripts executable
 chmod +x scripts/build-react-apps.js
@@ -80,41 +73,35 @@ chmod +x scripts/check-gitignore.js
 chmod +x scripts/check-lowercase.js
 chmod +x scripts/git-reminder.js
 
-echo "✅ All scripts downloaded successfully"
+# Update package.json
+echo "📝 Updating package.json..."
 
-# Install Husky
-echo -e "\nInstalling Husky..."
-npm install husky --save-dev
-
-# Update package.json to add scripts
-echo -e "\nUpdating package.json..."
-node "scripts/update-package-json.js" "$(pwd)/package.json"
-
-# Add scripts to package.json if they don't exist
-if ! grep -q '"check-gitignore"' package.json; then
-  echo "📝 Adding check-gitignore script to package.json..."
-  sed -i.bak -e '/"scripts":/,/}/s/}/,\n    "check-gitignore": "node scripts\/check-gitignore.js"\n  }/' package.json
-  rm package.json.bak
+# Check if jq is available
+if command -v jq &> /dev/null; then
+  # Use jq to update package.json
+  jq '.scripts["check-gitignore"] = "node scripts/check-gitignore.js"' package.json > package.json.tmp && mv package.json.tmp package.json
+  jq '.scripts["check-lowercase"] = "node scripts/check-lowercase.js"' package.json > package.json.tmp && mv package.json.tmp package.json
+  jq '.scripts["git-reminder"] = "node scripts/git-reminder.js"' package.json > package.json.tmp && mv package.json.tmp package.json
+else
+  # Fallback to sed if jq is not available
+  # This is less reliable but should work for most cases
+  if ! grep -q '"check-gitignore":' package.json; then
+    sed -i.bak 's/"scripts": {/"scripts": {\n    "check-gitignore": "node scripts\/check-gitignore.js",/' package.json && rm -f package.json.bak
+  fi
+  
+  if ! grep -q '"check-lowercase":' package.json; then
+    sed -i.bak 's/"scripts": {/"scripts": {\n    "check-lowercase": "node scripts\/check-lowercase.js",/' package.json && rm -f package.json.bak
+  fi
+  
+  if ! grep -q '"git-reminder":' package.json; then
+    sed -i.bak 's/"scripts": {/"scripts": {\n    "git-reminder": "node scripts\/git-reminder.js",/' package.json && rm -f package.json.bak
+  fi
 fi
 
-if ! grep -q '"check-lowercase"' package.json; then
-  echo "📝 Adding check-lowercase script to package.json..."
-  sed -i.bak -e '/"scripts":/,/}/s/}/,\n    "check-lowercase": "node scripts\/check-lowercase.js"\n  }/' package.json
-  rm package.json.bak
-fi
-
-if ! grep -q '"git-reminder"' package.json; then
-  echo "📝 Adding git-reminder script to package.json..."
-  sed -i.bak -e '/"scripts":/,/}/s/}/,\n    "git-reminder": "node scripts\/git-reminder.js"\n  }/' package.json
-  rm package.json.bak
-fi
-
-# Initialize Husky
-echo -e "\n🔄 Setting up Git hooks..."
-npx husky install || { echo "❌ Failed to initialize Husky"; exit 1; }
-
-# Create the pre-commit hook
-cat > .husky/pre-commit << 'EOL'
+# Create pre-commit hook
+echo "📝 Creating pre-commit hook..."
+mkdir -p .husky
+cat > .husky/pre-commit << 'EOF'
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
@@ -129,22 +116,18 @@ npm run build
 
 # Run git reminder
 npm run git-reminder
-EOL
+EOF
 
-# Make the hook executable
+# Make hook executable
 chmod +x .husky/pre-commit
 
-echo "✅ Successfully set up pre-commit hook!"
-
-echo -e "\n==================================================="
-echo " Installation Complete!"
-echo "==================================================="
-echo -e "\nThe Git hook will now:"
-echo "1. Check and update .gitignore for sensitive files"
-echo "2. Check for lowercase file names and import statements"
-echo "3. Enforce building React apps"
-echo "4. Run git reminder"
-echo -e "\nThese checks will run before each commit"
-echo -e "\nTo distribute to your team, they just need to run:"
-echo "  npm install"
-echo ""
+echo "🎉 React Build Git Hooks have been installed successfully!"
+echo
+echo "The following hooks have been installed:"
+echo "- Build verification: Ensures your React app builds successfully before committing"
+echo "- Gitignore check: Ensures your .gitignore contains essential patterns"
+echo "- Lowercase check: Suggests using lowercase for file names and import paths"
+echo "- Git reminder: Reminds you to commit regularly and checks for uncommitted changes"
+echo
+echo "You can customize the behavior of each hook by editing the hooks-config.js file."
+echo "To update the hooks in the future, run: curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/curl-update.sh | bash"
