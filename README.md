@@ -10,6 +10,34 @@
 
 </div>
 
+## 🚨 Why Pre-commit Checks Are Necessary
+
+Pre-commit hooks act like a gatekeeper to your codebase. They help catch issues before bad code or sensitive data gets into your Git history (which is permanent and hard to fix later). Here's why running npm run build, .gitignore checks, and security-related checks pre-commit is so important:
+
+### 1. 🏗️ npm run build (or npm run build:dev)
+✅ **Purpose**: Verify that your app compiles correctly.
+
+**Why it matters**:
+- Catches broken builds early – prevents commits that crash CI/CD pipelines.
+- Avoids pushing broken code that blocks your team or production deploys.
+- Ensures all dependencies are correctly wired (TypeScript types, imports, etc.).
+
+🧠 **Optional**: Do this in pre-push instead of pre-commit if the build takes a while.
+
+### 2. 🔐 .gitignore Check for Sensitive Files
+✅ **Purpose**: Prevent committing sensitive or unnecessary files like:
+- .env
+- node_modules/
+- npm_install
+- package-lock.json (if you're not locking deps)
+- .DS_Store, Thumbs.db, logs, etc.
+
+**Why it matters**:
+- .env files often contain secrets (API keys, DB creds, etc.)
+- If you push it once, it's forever in Git history unless force-cleaned.
+- node_modules/ is huge and shouldn't be versioned.
+- Accidentally committing npm_install or build output clutters the repo.
+
 ## Overview
 
 React Build Git Hooks is a powerful, zero-configuration solution that enforces two critical practices in your React projects:
@@ -40,6 +68,7 @@ This helps teams maintain high-quality code and prevents accidental exposure of 
 - [Contributing](#-contributing)
 - [License](#-license)
 - [Uninstallation](#-uninstallation)
+- [Updating](#-updating)
 
 ## Quick Installation
 
@@ -434,6 +463,47 @@ node uninstall.mjs
    ```bash
    rm -f scripts/check-gitignore.js scripts/build-react-apps.js
    ```
+
+## 🔄 Updating
+
+When new features or bug fixes are released, you can easily update your Git hooks to the latest version.
+
+### One-Line Update
+
+For a quick update, run this command in your React project directory:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/curl-update.sh -o update.sh && bash update.sh
+```
+
+### Using the Update Script
+
+If you've cloned the repository, run the update script in your project directory:
+
+```bash
+# For CommonJS projects
+node update.js
+
+# For ES Module projects (with "type": "module" in package.json)
+node update.mjs
+```
+
+### Manual Update
+
+1. Remove the existing hooks and scripts:
+   ```bash
+   rm -f .husky/pre-commit .husky/pre-push
+   rm -f scripts/check-gitignore.js scripts/build-react-apps.js
+   ```
+
+2. Follow the [installation instructions](#-installation) again to get the latest version.
+
+### What's New in the Latest Update
+
+- Fixed infinite build loop issue
+- Added Husky v10 compatibility
+- Improved error handling
+- Added uninstallation options
 
 ---
 
