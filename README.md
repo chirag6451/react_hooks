@@ -508,10 +508,9 @@ node update.mjs
 ---
 
 <div align="center">
-  <p>Made with ❤️ for React developers</p>
-  <p>
-    <a href="https://github.com/chirag6451/react_hooks/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/chirag6451/react_hooks/issues">Request Feature</a>
-  </p>
+
+**Made with ❤️ by [Chirag Kansara](https://www.linkedin.com/in/indapoint/)**
+
+[Report an Issue](https://github.com/chirag6451/react_hooks/issues) | [Request a Feature](https://github.com/chirag6451/react_hooks/issues)
+
 </div>

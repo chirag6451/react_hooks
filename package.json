@@ -2,6 +2,8 @@
   "name": "react-build-hooks",
   "version": "1.0.0",
   "description": "Git hooks to enforce build commands for React apps",
+  "author": "Chirag Kansara <https://www.linkedin.com/in/indapoint/>",
+  "license": "MIT",
   "scripts": {
     "prepare": "husky install",
     "check-gitignore": "node scripts/check-gitignore.js",
@@ -12,5 +14,17 @@
   },
   "devDependencies": {
     "husky": "^9.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chirag6451/react_hooks.git"
+  },
+  "keywords": [
+    "react",
+    "git",
+    "hooks",
+    "husky",
+    "build",
+    "gitignore"
+  ]
 }
