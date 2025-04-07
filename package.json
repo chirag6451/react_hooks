@@ -7,6 +7,7 @@
   "scripts": {
     "prepare": "husky install",
     "check-gitignore": "node scripts/check-gitignore.js",
+    "check-lowercase": "node scripts/check-lowercase.js",
     "postinstall": "node setup.js"
   },
   "bin": {

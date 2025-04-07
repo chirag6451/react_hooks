@@ -64,13 +64,6 @@ try {
     fs.mkdirSync(scriptsDir, { recursive: true });
   }
   
-  // Copy check-gitignore.js
-  fs.copyFileSync(
-    path.join(tempDir, 'scripts', 'check-gitignore.js'),
-    path.join(scriptsDir, 'check-gitignore.js')
-  );
-  console.log('✅ Updated check-gitignore.js');
-  
   // Copy build-react-apps.js
   fs.copyFileSync(
     path.join(tempDir, 'scripts', 'build-react-apps.js'),
@@ -78,9 +71,24 @@ try {
   );
   console.log('✅ Updated build-react-apps.js');
   
+  // Copy check-gitignore.js
+  fs.copyFileSync(
+    path.join(tempDir, 'scripts', 'check-gitignore.js'),
+    path.join(scriptsDir, 'check-gitignore.js')
+  );
+  console.log('✅ Updated check-gitignore.js');
+  
+  // Copy check-lowercase.js
+  fs.copyFileSync(
+    path.join(tempDir, 'scripts', 'check-lowercase.js'),
+    path.join(scriptsDir, 'check-lowercase.js')
+  );
+  console.log('✅ Updated check-lowercase.js');
+  
   // Make scripts executable
-  fs.chmodSync(path.join(scriptsDir, 'check-gitignore.js'), '755');
   fs.chmodSync(path.join(scriptsDir, 'build-react-apps.js'), '755');
+  fs.chmodSync(path.join(scriptsDir, 'check-gitignore.js'), '755');
+  fs.chmodSync(path.join(scriptsDir, 'check-lowercase.js'), '755');
 } catch (error) {
   console.error('❌ Failed to update script files:', error.message);
 }
@@ -96,7 +104,13 @@ try {
     }
     
     // Update scripts
-    packageJson.scripts['check-gitignore'] = 'node scripts/check-gitignore.js';
+    if (!packageJson.scripts['check-gitignore']) {
+      packageJson.scripts['check-gitignore'] = 'node scripts/check-gitignore.js';
+    }
+    
+    if (!packageJson.scripts['check-lowercase']) {
+      packageJson.scripts['check-lowercase'] = 'node scripts/check-lowercase.js';
+    }
     
     // Remove build:dev script if it exists (to prevent infinite loop)
     if (packageJson.scripts['build:dev']) {
@@ -116,9 +130,13 @@ console.log(`\n📝 Updating ${currentHookType} hook...`);
 try {
   const hookPath = path.join('.husky', currentHookType);
   const hookContent = `#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
 # Check .gitignore for sensitive files
 npm run check-gitignore
+
+# Check for lowercase file names and import statements
+npm run check-lowercase
 
 # Run build for React apps directly
 npm run build

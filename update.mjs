@@ -69,31 +69,32 @@ try {
     fs.mkdirSync(scriptsDir, { recursive: true });
   }
   
-  // Convert and copy check-gitignore.js
-  let checkGitignoreContent = fs.readFileSync(path.join(tempDir, 'scripts', 'check-gitignore.js'), 'utf8');
-  // Convert requires to imports
-  checkGitignoreContent = checkGitignoreContent
-    .replace(/const\s+{\s*execSync\s*}\s*=\s*require\(['"]child_process['"]\);/g, 'import { execSync } from "child_process";')
-    .replace(/const\s+fs\s*=\s*require\(['"]fs['"]\);/g, 'import fs from "fs";')
-    .replace(/const\s+path\s*=\s*require\(['"]path['"]\);/g, 'import path from "path";');
-  
-  fs.writeFileSync(path.join(scriptsDir, 'check-gitignore.js'), checkGitignoreContent);
-  console.log('✅ Updated check-gitignore.js (converted to ES module)');
-  
-  // Convert and copy build-react-apps.js
-  let buildReactAppsContent = fs.readFileSync(path.join(tempDir, 'scripts', 'build-react-apps.js'), 'utf8');
-  // Convert requires to imports
-  buildReactAppsContent = buildReactAppsContent
-    .replace(/const\s+{\s*execSync\s*}\s*=\s*require\(['"]child_process['"]\);/g, 'import { execSync } from "child_process";')
-    .replace(/const\s+fs\s*=\s*require\(['"]fs['"]\);/g, 'import fs from "fs";')
-    .replace(/const\s+path\s*=\s*require\(['"]path['"]\);/g, 'import path from "path";');
-  
-  fs.writeFileSync(path.join(scriptsDir, 'build-react-apps.js'), buildReactAppsContent);
-  console.log('✅ Updated build-react-apps.js (converted to ES module)');
-  
+  // Copy build-react-apps.js
+  fs.copyFileSync(
+    path.join(tempDir, 'scripts', 'build-react-apps.js'),
+    path.join(scriptsDir, 'build-react-apps.js')
+  );
+
+  // Copy check-gitignore.js
+  fs.copyFileSync(
+    path.join(tempDir, 'scripts', 'check-gitignore.js'),
+    path.join(scriptsDir, 'check-gitignore.js')
+  );
+
+  // Copy check-lowercase.js
+  fs.copyFileSync(
+    path.join(tempDir, 'scripts', 'check-lowercase.js'),
+    path.join(scriptsDir, 'check-lowercase.js')
+  );
+
   // Make scripts executable
-  fs.chmodSync(path.join(scriptsDir, 'check-gitignore.js'), '755');
-  fs.chmodSync(path.join(scriptsDir, 'build-react-apps.js'), '755');
+  try {
+    fs.chmodSync(path.join(scriptsDir, 'build-react-apps.js'), '755');
+    fs.chmodSync(path.join(scriptsDir, 'check-gitignore.js'), '755');
+    fs.chmodSync(path.join(scriptsDir, 'check-lowercase.js'), '755');
+  } catch (error) {
+    console.warn('⚠️ Could not make scripts executable. You may need to do this manually.');
+  }
 } catch (error) {
   console.error('❌ Failed to update script files:', error.message);
 }
@@ -109,14 +110,14 @@ try {
     }
     
     // Update scripts
-    packageJson.scripts['check-gitignore'] = 'node scripts/check-gitignore.js';
-    
-    // Remove build:dev script if it exists (to prevent infinite loop)
-    if (packageJson.scripts['build:dev']) {
-      delete packageJson.scripts['build:dev'];
-      console.log('✅ Removed build:dev script to prevent infinite loop');
+    if (!packageJson.scripts['check-gitignore']) {
+      packageJson.scripts['check-gitignore'] = 'node scripts/check-gitignore.js';
     }
-    
+
+    if (!packageJson.scripts['check-lowercase']) {
+      packageJson.scripts['check-lowercase'] = 'node scripts/check-lowercase.js';
+    }
+
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
     console.log('✅ Updated package.json scripts');
   }
@@ -129,9 +130,13 @@ console.log(`\n📝 Updating ${currentHookType} hook...`);
 try {
   const hookPath = path.join('.husky', currentHookType);
   const hookContent = `#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
 # Check .gitignore for sensitive files
 npm run check-gitignore
+
+# Check for lowercase file names and import statements
+npm run check-lowercase
 
 # Run build for React apps directly
 npm run build

@@ -6,7 +6,7 @@
 ![Git Hooks](https://img.shields.io/badge/Git-Hooks-F05032?style=for-the-badge&logo=git)
 ![Node.js](https://img.shields.io/badge/Node.js-14+-339933?style=for-the-badge&logo=node.js)
 
-**Enforce React builds and secure .gitignore patterns before commits**
+**Enforce React builds, secure .gitignore patterns, and lowercase naming conventions before commits**
 
 </div>
 
@@ -38,12 +38,20 @@ Pre-commit hooks act like a gatekeeper to your codebase. They help catch issues 
 - node_modules/ is huge and shouldn't be versioned.
 - Accidentally committing npm_install or build output clutters the repo.
 
+### 3. 🔍 Lowercase Enforcement
+✅ **Purpose**: Ensure all file names and import statements use lowercase for consistency across your codebase.
+
+**Why it matters**:
+- Prevents issues on case-sensitive systems.
+- Maintains consistent naming conventions across your codebase.
+
 ## Overview
 
-React Build Git Hooks is a powerful, zero-configuration solution that enforces two critical practices in your React projects:
+React Build Git Hooks is a powerful, zero-configuration solution that enforces three critical practices in your React projects:
 
 1. **Build Verification**: Automatically builds all React apps in your repository before commits/pushes to catch build errors early
 2. **Security Checks**: Ensures sensitive files (like `.env`, `node_modules`) are properly added to `.gitignore`
+3. **Lowercase Enforcement**: Ensures all file names and import statements use lowercase for consistency across your codebase
 
 This helps teams maintain high-quality code and prevents accidental exposure of sensitive information.
 
@@ -52,7 +60,8 @@ This helps teams maintain high-quality code and prevents accidental exposure of 
 - **Auto-detection**: Automatically finds all React apps in your repository
 - **Smart Building**: Runs the appropriate build command for each app (`build:dev` or `build`)
 - **Security**: Checks and updates `.gitignore` to include sensitive files and directories
-- **Prevention**: Blocks commits/pushes if any build fails
+- **Lowercase Enforcement**: Ensures all file names and import statements use lowercase
+- **Prevention**: Blocks commits/pushes if any build fails or if lowercase naming conventions are not followed
 - **Easy Distribution**: Simple to install and share with your team
 - **Cross-Platform**: Works on macOS, Linux, and Windows
 
@@ -187,7 +196,7 @@ npm install react-build-hooks --save-dev
 
 ## How It Works
 
-The hooks perform two main functions:
+The hooks perform three main functions:
 
 ### 1. .gitignore Check
 
@@ -219,6 +228,17 @@ After the gitignore check, the hook:
 1. Finds all React applications in your repository by scanning for package.json files with React dependencies
 2. For each React app, runs either `npm run build:dev` or `npm run build` (preferring build:dev if available)
 3. If any build fails, prevents the commit/push with a helpful error message
+
+### 3. Lowercase Enforcement
+
+After the build check, the hook:
+
+<div align="center">
+<img src="https://mermaid.ink/img/pako:eNp9kU1PwzAMhv9KlBMgTWq7wQE-DhwQEhI7wIVLaJzS0DYZSQZDiP9OnG5lRb4kfvz6tZ1jZo1FxjnbOtx6fELTIXwqXGvVQYNGdqjhWlmLGnZKt3BRqwZu1UbCRfKZJJ_JRRKlIoGVMuJFdWjgTnUCXpVu4Vk1Qr5IeJA7AQ-yE_CkWiHXqhWwVK2QG9kJeJSdkM9qI-C77IR8UZ2QL6oV8F1tBHxTrZBvqhPwQ3VCPqtGyGfVCnhVnZBPqhXwQ3VCvqpWwLPaCPimWgE_VSfkRrUCblUn5JNqhHxVrYBn1Qn5rFohP1Qn5JtqBfxSGyHXqhXwR3VCbmQr5I_aCnhXnZBb1Qr5qzZCvqtWwF-1FfJPdUL-qVbAf9UJ-a82Qm5VK-Sf2gr5rzohd6oV8qA6IX_URsit2gp5UJ2Qe9UKuVedkAfVCXlUGyGPqhXyqDohT6oV8qQ6IU-qFfKkOiFPaiPkSbVCnlQr5El1Qp5UK-RJdUL-A_GbyQA?type=png" alt="Lowercase Enforcement Flow" width="600">
+</div>
+
+1. Scans your repository for file names and import statements that do not use lowercase
+2. If any are found, prevents the commit/push with a helpful error message
 
 ## Team Distribution
 
@@ -313,6 +333,24 @@ const essentialPatterns = [
   'secrets/',
   '*.key',
   // ...existing patterns
+];
+```
+
+### Lowercase Enforcement
+
+Edit `scripts/check-lowercase.js` to:
+- Modify which files are checked for lowercase naming
+- Adjust the import statement patterns
+
+```javascript
+// Example: Add custom file extensions to check
+const fileExtensions = [
+  // Your custom file extensions
+  '.js',
+  '.jsx',
+  '.ts',
+  '.tsx',
+  // ...existing file extensions
 ];
 ```
 

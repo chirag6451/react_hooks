@@ -46,25 +46,21 @@ temp_dir=$(mktemp -d)
 echo -e "\nCreating temporary directory: $temp_dir"
 
 # Download the necessary files
-echo "Downloading scripts..."
+echo "📥 Downloading scripts..."
 
 # Create scripts directory if it doesn't exist
 mkdir -p scripts
 
 # Download build-react-apps.js
 echo "Downloading build-react-apps.js..."
-curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/scripts/build-react-apps.js -o scripts/build-react-apps.js
+curl -s "https://raw.githubusercontent.com/chirag6451/react_hooks/main/scripts/build-react-apps.js" -o "scripts/build-react-apps.js"
+curl -s "https://raw.githubusercontent.com/chirag6451/react_hooks/main/scripts/check-gitignore.js" -o "scripts/check-gitignore.js"
+curl -s "https://raw.githubusercontent.com/chirag6451/react_hooks/main/scripts/check-lowercase.js" -o "scripts/check-lowercase.js"
+
+# Make scripts executable
 chmod +x scripts/build-react-apps.js
-
-# Download check-gitignore.js
-echo "Downloading check-gitignore.js..."
-curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/scripts/check-gitignore.js -o scripts/check-gitignore.js
 chmod +x scripts/check-gitignore.js
-
-# Download update-package-json.js
-echo "Downloading update-package-json.js..."
-curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/scripts/update-package-json.js -o scripts/update-package-json.js
-chmod +x scripts/update-package-json.js
+chmod +x scripts/check-lowercase.js
 
 echo "✅ All scripts downloaded successfully"
 
@@ -76,20 +72,37 @@ npm install husky --save-dev
 echo -e "\nUpdating package.json..."
 node "scripts/update-package-json.js" "$(pwd)/package.json"
 
+# Add scripts to package.json if they don't exist
+if ! grep -q '"check-gitignore"' package.json; then
+  echo "📝 Adding check-gitignore script to package.json..."
+  sed -i.bak -e '/"scripts":/,/}/s/}/,\n    "check-gitignore": "node scripts\/check-gitignore.js"\n  }/' package.json
+  rm package.json.bak
+fi
+
+if ! grep -q '"check-lowercase"' package.json; then
+  echo "📝 Adding check-lowercase script to package.json..."
+  sed -i.bak -e '/"scripts":/,/}/s/}/,\n    "check-lowercase": "node scripts\/check-lowercase.js"\n  }/' package.json
+  rm package.json.bak
+fi
+
 # Initialize Husky
 echo -e "\n🔄 Setting up Git hooks..."
 npx husky install || { echo "❌ Failed to initialize Husky"; exit 1; }
 
 # Create the hook script with Husky v10 compatibility
-cat > .husky/pre-commit << 'EOF'
+cat > .husky/pre-commit << 'EOL'
 #!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
 # Check .gitignore for sensitive files
 npm run check-gitignore
 
+# Check for lowercase file names and import statements
+npm run check-lowercase
+
 # Run build for React apps directly
 npm run build
-EOF
+EOL
 
 # Make the hook executable
 chmod +x .husky/pre-commit
@@ -101,7 +114,8 @@ echo " Installation Complete!"
 echo "==================================================="
 echo -e "\nThe Git hook will now:"
 echo "1. Check and update .gitignore for sensitive files"
-echo "2. Enforce building React apps"
+echo "2. Check for lowercase file names and import statements"
+echo "3. Enforce building React apps"
 echo -e "\nThese checks will run before each commit"
 echo -e "\nTo distribute to your team, they just need to run:"
 echo "  npm install"

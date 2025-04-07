@@ -63,6 +63,9 @@ rl.question('\n🤔 Which hook would you like to use?\n1. pre-commit (runs befor
 # Check .gitignore for sensitive files
 npm run check-gitignore
 
+# Check for lowercase file names and import statements
+npm run check-lowercase
+
 # Run build for React apps directly
 npm run build
 `;
@@ -80,7 +83,8 @@ npm run build
   
   console.log('\n🎉 Setup complete! The Git hook will now:');
   console.log('1. Check and update .gitignore for sensitive files');
-  console.log('2. Enforce building React apps');
+  console.log('2. Check for lowercase file names and import statements');
+  console.log('3. Enforce building React apps');
   console.log(`These checks will run before each ${hookType === 'pre-commit' ? 'commit' : 'push'}.`);
   console.log('\n👥 To distribute to your team, they just need to run:');
   console.log('   npm install');
