@@ -288,15 +288,46 @@ const essentialPatterns = [
 
 ## Troubleshooting
 
-### Bypassing Hooks Temporarily
+### Common Issues
 
-If you need to bypass the hooks temporarily (not recommended), you can use:
-
-```bash
-git commit --no-verify
-# or
-git push --no-verify
+#### Missing check-gitignore script
+If you see an error like:
 ```
+npm error Missing script: "check-gitignore"
+```
+This means the script is missing from your package.json. Run the fix-husky-hooks.js script to add it:
+```bash
+node fix-husky-hooks.js
+```
+
+#### Husky v10 Compatibility Warning
+If you see a warning like:
+```
+husky - DEPRECATED
+
+Please remove the following two lines from .husky/pre-commit:
+
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+They WILL FAIL in v10.0.0
+```
+
+This is because Husky v10 has changed how hooks are structured. Run our fix script:
+```bash
+node fix-husky-hooks.js
+```
+
+This script will:
+1. Remove the deprecated lines from your hooks
+2. Ensure the check-gitignore script is in your package.json
+3. Make your hooks compatible with Husky v10
+
+#### Build Failing
+If your build fails, check the error message for clues. Common issues include:
+- Missing dependencies
+- Incorrect build script
+- Build output not found
 
 ### macOS/Linux-Specific Issues
 
@@ -313,12 +344,6 @@ git push --no-verify
   ```
 
 - **Permission Issues**: Try running the scripts as Administrator if you encounter permission problems
-
-### Common Issues
-
-- **Build Script Not Found**: If your React app uses a different build script name, modify the `build-react-apps.js` file to include it
-- **Hook Not Running**: Make sure Husky is properly installed and initialized. Try running `npx husky install` manually
-- **Multiple React Apps**: If you have multiple React apps in a monorepo, the hook will build all of them by default
 
 ## Requirements
 

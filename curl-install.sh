@@ -77,41 +77,24 @@ echo -e "\nUpdating package.json..."
 node "scripts/update-package-json.js" "$(pwd)/package.json"
 
 # Initialize Husky
-echo -e "\nInitializing Husky..."
-npx husky install
+echo -e "\n🔄 Setting up Git hooks..."
+npx husky install || { echo "❌ Failed to initialize Husky"; exit 1; }
 
-# Ask which hook to use
-echo -e "\nWhich hook would you like to use?"
-echo "1. pre-commit (runs before each commit)"
-echo "2. pre-push (runs before each push)"
-read -p "Enter 1 or 2: " hook_choice
-
-if [ "$hook_choice" = "2" ]; then
-    hook_type="pre-push"
-else
-    hook_type="pre-commit"
-fi
-
-# Create the hook script
-echo -e "\nCreating $hook_type hook..."
-if [ ! -d ".husky" ]; then
-    mkdir -p .husky
-fi
-
-cat > ".husky/$hook_type" << EOL
+# Create the hook script with Husky v10 compatibility
+cat > .husky/pre-commit << 'EOF'
 #!/bin/sh
-. "\$(dirname "\$0")/_/husky.sh"
 
 # Check .gitignore for sensitive files
 npm run check-gitignore
 
 # Run build for React apps
 npm run build:dev
-EOL
+EOF
 
 # Make the hook executable
-chmod +x ".husky/$hook_type"
-echo "✅ Hook created and made executable"
+chmod +x .husky/pre-commit
+
+echo "✅ Successfully set up pre-commit hook!"
 
 echo -e "\n==================================================="
 echo " Installation Complete!"
@@ -119,7 +102,7 @@ echo "==================================================="
 echo -e "\nThe Git hook will now:"
 echo "1. Check and update .gitignore for sensitive files"
 echo "2. Enforce building React apps"
-echo -e "\nThese checks will run before each ${hook_type/pre-/}"
+echo -e "\nThese checks will run before each commit"
 echo -e "\nTo distribute to your team, they just need to run:"
 echo "  npm install"
 echo ""

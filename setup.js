@@ -57,9 +57,8 @@ rl.question('\n🤔 Which hook would you like to use?\n1. pre-commit (runs befor
   
   // Add the hooks
   try {
-    // Create the hook script content
+    // Create the hook script content - Updated for Husky v10 compatibility
     const hookScript = `#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
 # Check .gitignore for sensitive files
 npm run check-gitignore
