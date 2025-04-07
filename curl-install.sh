@@ -87,8 +87,8 @@ cat > .husky/pre-commit << 'EOF'
 # Check .gitignore for sensitive files
 npm run check-gitignore
 
-# Run build for React apps
-npm run build:dev
+# Run build for React apps directly
+npm run build
 EOF
 
 # Make the hook executable

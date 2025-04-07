@@ -39,6 +39,7 @@ This helps teams maintain high-quality code and prevents accidental exposure of 
 - [Requirements](#-requirements)
 - [Contributing](#-contributing)
 - [License](#-license)
+- [Uninstallation](#-uninstallation)
 
 ## Quick Installation
 
@@ -286,7 +287,7 @@ const essentialPatterns = [
 ];
 ```
 
-## Troubleshooting
+## 🗑️ Troubleshooting
 
 ### Common Issues
 
@@ -299,6 +300,32 @@ This means the script is missing from your package.json. Run the fix-husky-hooks
 ```bash
 node fix-husky-hooks.js
 ```
+
+#### Infinite Build Loop
+If you see the build script running in an infinite loop like this:
+```
+> npm run build:dev
+> node scripts/build-react-apps.js
+...
+> npm run build:dev
+> node scripts/build-react-apps.js
+...
+```
+
+This happens because the build script is calling itself recursively. To fix this:
+
+1. Edit your `.husky/pre-commit` file to use the direct build script:
+   ```bash
+   #!/bin/sh
+   
+   # Check .gitignore for sensitive files
+   npm run check-gitignore
+   
+   # Run build for React apps directly
+   npm run build
+   ```
+
+2. Remove the `build:dev` script from your package.json if it exists
 
 #### Husky v10 Compatibility Warning
 If you see a warning like:
@@ -364,6 +391,49 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🗑️ Uninstallation
+
+If you no longer want to use the Git hooks, you can easily remove them:
+
+### One-Line Uninstallation
+
+For a quick uninstall, run this command in your React project directory:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/curl-uninstall.sh -o uninstall.sh && bash uninstall.sh
+```
+
+### Using the Uninstall Script
+
+If you've cloned the repository, run the uninstall script in your project directory:
+
+```bash
+# For CommonJS projects
+node uninstall.js
+
+# For ES Module projects (with "type": "module" in package.json)
+node uninstall.mjs
+```
+
+### Manual Uninstallation
+
+1. Remove the hooks from the `.husky` directory:
+   ```bash
+   rm -f .husky/pre-commit .husky/pre-push
+   ```
+   
+2. Remove the scripts from your `package.json`:
+   ```json
+   // Remove these entries from the "scripts" section
+   "check-gitignore": "node scripts/check-gitignore.js",
+   "build:dev": "node scripts/build-react-apps.js"
+   ```
+
+3. Remove the script files:
+   ```bash
+   rm -f scripts/check-gitignore.js scripts/build-react-apps.js
+   ```
 
 ---
 

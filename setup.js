@@ -63,8 +63,8 @@ rl.question('\n🤔 Which hook would you like to use?\n1. pre-commit (runs befor
 # Check .gitignore for sensitive files
 npm run check-gitignore
 
-# Run build for React apps
-npm run build:dev
+# Run build for React apps directly
+npm run build
 `;
 
     // Create the hook file

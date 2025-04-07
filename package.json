@@ -4,7 +4,6 @@
   "description": "Git hooks to enforce build commands for React apps",
   "scripts": {
     "prepare": "husky install",
-    "build:dev": "node scripts/build-react-apps.js",
     "check-gitignore": "node scripts/check-gitignore.js",
     "postinstall": "node setup.js"
   },

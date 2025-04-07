@@ -44,10 +44,10 @@ function findReactApps() {
         (packageJson.devDependencies && packageJson.devDependencies.react)
       ) {
         // Check if it has a build script
-        if (packageJson.scripts && (packageJson.scripts.build || packageJson.scripts['build:dev'])) {
+        if (packageJson.scripts && packageJson.scripts.build) {
           reactApps.push({
             dir,
-            buildScript: packageJson.scripts['build:dev'] ? 'build:dev' : 'build'
+            buildScript: 'build'
           });
         }
       }
@@ -77,6 +77,7 @@ function buildReactApps() {
     console.log(`\n📦 Building ${path.relative(gitRootDir, app.dir)} (npm run ${app.buildScript})`);
     
     try {
+      // Use direct npm command to avoid recursive calls
       execSync(`cd "${app.dir}" && npm run ${app.buildScript}`, { stdio: 'inherit' });
       console.log(`✅ Build successful for ${path.relative(gitRootDir, app.dir)}`);
     } catch (error) {
