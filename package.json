@@ -1,0 +1,16 @@
+{
+  "name": "react-build-hooks",
+  "version": "1.0.0",
+  "description": "Git hooks to enforce build commands for React apps",
+  "scripts": {
+    "prepare": "husky install",
+    "build:dev": "node scripts/build-react-apps.js",
+    "postinstall": "node setup.js"
+  },
+  "bin": {
+    "install-react-hooks": "./setup.js"
+  },
+  "devDependencies": {
+    "husky": "^9.0.0"
+  }
+}
