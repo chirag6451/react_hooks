@@ -3,7 +3,7 @@
 /**
  * This script checks that all staged files have lowercase names
  * and all import statements use lowercase paths
- * It will warn but not block commits
+ * It will warn or block commits based on configuration
  */
 
 // Module-agnostic imports (works in both CommonJS and ES Module environments)
@@ -29,6 +29,47 @@ const requireOrImport = async (moduleName) => {
   const fs = await requireOrImport('fs');
   const path = await requireOrImport('path');
   const { execSync } = await requireOrImport('child_process');
+
+  // Load configuration
+  let config = {
+    lowercase: {
+      enforce: false,
+      enabled: true
+    }
+  };
+
+  try {
+    // Try to load CommonJS config
+    if (typeof require !== 'undefined') {
+      try {
+        const configPath = path.join(process.cwd(), 'hooks-config.js');
+        if (fs.existsSync(configPath)) {
+          config = require(configPath);
+        }
+      } catch (error) {
+        // Ignore error, use default config
+      }
+    } else {
+      // Try to load ES Module config
+      try {
+        const configPath = path.join(process.cwd(), 'hooks-config.mjs');
+        if (fs.existsSync(configPath)) {
+          const importedConfig = await import(configPath);
+          config = importedConfig.default;
+        }
+      } catch (error) {
+        // Ignore error, use default config
+      }
+    }
+  } catch (error) {
+    // Ignore error, use default config
+  }
+
+  // Check if the hook is disabled
+  if (!config.lowercase || config.lowercase.enabled === false) {
+    console.log('ℹ️ Lowercase check is disabled in hooks-config.js');
+    return;
+  }
 
   console.log('🔍 Checking for lowercase file names and import statements...');
 
@@ -119,24 +160,39 @@ const requireOrImport = async (moduleName) => {
 
   // Report warnings
   if (hasWarnings) {
-    console.warn('⚠️ WARNING: Found files that do not follow lowercase naming convention:');
+    // Determine if we should enforce or just warn based on config
+    const shouldEnforce = config.lowercase && config.lowercase.enforce === true;
+    
+    if (shouldEnforce) {
+      console.error('❌ ERROR: Found files that do not follow lowercase naming convention:');
+    } else {
+      console.warn('⚠️ WARNING: Found files that do not follow lowercase naming convention:');
+    }
     
     if (warnings.fileNames.length > 0) {
-      console.warn('\n📁 Files with uppercase names:');
+      console[shouldEnforce ? 'error' : 'warn']('\n📁 Files with uppercase names:');
       warnings.fileNames.forEach(file => {
-        console.warn(`  - ${file}`);
+        console[shouldEnforce ? 'error' : 'warn'](`  - ${file}`);
       });
     }
     
     if (warnings.imports.length > 0) {
-      console.warn('\n📦 Files with uppercase import paths:');
+      console[shouldEnforce ? 'error' : 'warn']('\n📦 Files with uppercase import paths:');
       warnings.imports.forEach(({ file, importPath }) => {
-        console.warn(`  - ${file}: import path "${importPath}"`);
+        console[shouldEnforce ? 'error' : 'warn'](`  - ${file}: import path "${importPath}"`);
       });
     }
     
-    console.warn('\n⚠️ Consider renaming these files and updating import statements to use lowercase.');
-    console.warn('This is just a warning and will not prevent your commit.');
+    if (shouldEnforce) {
+      console.error('\n❌ Please rename these files and update import statements to use lowercase.');
+      console.error('You can bypass this check with git commit --no-verify, but this is not recommended.');
+      console.error('Alternatively, set enforce: false for lowercase in hooks-config.js to make this a warning only.');
+      process.exit(1);
+    } else {
+      console.warn('\n⚠️ Consider renaming these files and updating import statements to use lowercase.');
+      console.warn('This is just a warning and will not prevent your commit.');
+      console.warn('To enforce lowercase naming, set enforce: true for lowercase in hooks-config.js.');
+    }
   } else {
     console.log('✅ All file names and import statements follow lowercase convention.');
   }

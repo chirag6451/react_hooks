@@ -69,27 +69,26 @@ try {
     fs.mkdirSync(scriptsDir, { recursive: true });
   }
   
-  // Copy build-react-apps.js
+  const sourceDir = path.join(tempDir, 'scripts');
+  
+  // Copy scripts
   fs.copyFileSync(
-    path.join(tempDir, 'scripts', 'build-react-apps.js'),
+    path.join(sourceDir, 'build-react-apps.js'),
     path.join(scriptsDir, 'build-react-apps.js')
   );
 
-  // Copy check-gitignore.js
   fs.copyFileSync(
-    path.join(tempDir, 'scripts', 'check-gitignore.js'),
+    path.join(sourceDir, 'check-gitignore.js'),
     path.join(scriptsDir, 'check-gitignore.js')
   );
 
-  // Copy check-lowercase.js
   fs.copyFileSync(
-    path.join(tempDir, 'scripts', 'check-lowercase.js'),
+    path.join(sourceDir, 'check-lowercase.js'),
     path.join(scriptsDir, 'check-lowercase.js')
   );
 
-  // Copy git-reminder.js
   fs.copyFileSync(
-    path.join(tempDir, 'scripts', 'git-reminder.js'),
+    path.join(sourceDir, 'git-reminder.js'),
     path.join(scriptsDir, 'git-reminder.js')
   );
 
@@ -99,11 +98,34 @@ try {
     fs.mkdirSync(templatesDir, { recursive: true });
   }
 
-  // Copy template files
+  // Copy templates
   fs.copyFileSync(
-    path.join(tempDir, 'templates', 'pre-commands.js'),
+    path.join(sourceDir, 'templates', 'pre-commands.js'),
     path.join(templatesDir, 'pre-commands.js')
   );
+
+  // Copy configuration files (don't overwrite existing ones)
+  const configJsPath = path.join(process.cwd(), 'hooks-config.js');
+  if (!fs.existsSync(configJsPath)) {
+    fs.copyFileSync(
+      path.join(sourceDir, 'hooks-config.js'),
+      configJsPath
+    );
+    console.log('✅ Created hooks-config.js configuration file');
+  } else {
+    console.log('ℹ️ Existing hooks-config.js file preserved');
+  }
+
+  const configMjsPath = path.join(process.cwd(), 'hooks-config.mjs');
+  if (!fs.existsSync(configMjsPath)) {
+    fs.copyFileSync(
+      path.join(sourceDir, 'hooks-config.mjs'),
+      configMjsPath
+    );
+    console.log('✅ Created hooks-config.mjs configuration file');
+  } else {
+    console.log('ℹ️ Existing hooks-config.mjs file preserved');
+  }
 
   // Make scripts executable
   try {

@@ -30,6 +30,12 @@ if (!fs.existsSync(scriptsDir)) {
   fs.mkdirSync(scriptsDir, { recursive: true });
 }
 
+// Create templates directory if it doesn't exist
+const templatesDir = path.join(process.cwd(), 'templates');
+if (!fs.existsSync(templatesDir)) {
+  fs.mkdirSync(templatesDir, { recursive: true });
+}
+
 // Copy scripts
 fs.copyFileSync(
   path.join(__dirname, 'scripts', 'build-react-apps.js'),
@@ -51,16 +57,21 @@ fs.copyFileSync(
   path.join(scriptsDir, 'git-reminder.js')
 );
 
-// Create templates directory if it doesn't exist
-const templatesDir = path.join(process.cwd(), 'templates');
-if (!fs.existsSync(templatesDir)) {
-  fs.mkdirSync(templatesDir, { recursive: true });
-}
-
-// Copy template files
+// Copy templates
 fs.copyFileSync(
   path.join(__dirname, 'templates', 'pre-commands.js'),
   path.join(templatesDir, 'pre-commands.js')
+);
+
+// Copy configuration files
+fs.copyFileSync(
+  path.join(__dirname, 'hooks-config.js'),
+  path.join(process.cwd(), 'hooks-config.js')
+);
+
+fs.copyFileSync(
+  path.join(__dirname, 'hooks-config.mjs'),
+  path.join(process.cwd(), 'hooks-config.mjs')
 );
 
 // Make scripts executable

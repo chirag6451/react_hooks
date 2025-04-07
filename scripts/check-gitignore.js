@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * This script checks if the .gitignore file contains all essential patterns
- * and add them if they're missing.
+ * This script checks if the .gitignore file contains essential patterns
+ * to prevent committing sensitive files
+ * It will warn or block commits based on configuration
  */
 
 // Module-agnostic imports (works in both CommonJS and ES Module environments)
@@ -27,15 +28,52 @@ const requireOrImport = async (moduleName) => {
   // Import modules dynamically
   const fs = await requireOrImport('fs');
   const path = await requireOrImport('path');
-  const { execSync } = await requireOrImport('child_process');
+
+  // Load configuration
+  let config = {
+    gitignore: {
+      enforce: true,
+      enabled: true
+    }
+  };
+
+  try {
+    // Try to load CommonJS config
+    if (typeof require !== 'undefined') {
+      try {
+        const configPath = path.join(process.cwd(), 'hooks-config.js');
+        if (fs.existsSync(configPath)) {
+          config = require(configPath);
+        }
+      } catch (error) {
+        // Ignore error, use default config
+      }
+    } else {
+      // Try to load ES Module config
+      try {
+        const configPath = path.join(process.cwd(), 'hooks-config.mjs');
+        if (fs.existsSync(configPath)) {
+          const importedConfig = await import(configPath);
+          config = importedConfig.default;
+        }
+      } catch (error) {
+        // Ignore error, use default config
+      }
+    }
+  } catch (error) {
+    // Ignore error, use default config
+  }
+
+  // Check if the hook is disabled
+  if (!config.gitignore || config.gitignore.enabled === false) {
+    console.log('ℹ️ Gitignore check is disabled in hooks-config.js');
+    return;
+  }
+
+  // Determine if we should enforce or just warn
+  const shouldEnforce = config.gitignore && config.gitignore.enforce === true;
 
   console.log('🔍 Checking .gitignore file...');
-
-  // Get the git root directory
-  const gitRootDir = execSync('git rev-parse --show-toplevel').toString().trim();
-
-  // Path to .gitignore file
-  const gitignorePath = path.join(gitRootDir, '.gitignore');
 
   // Essential patterns that should be in .gitignore
   const essentialPatterns = [
@@ -49,50 +87,73 @@ const requireOrImport = async (moduleName) => {
     'yarn-debug.log*',
     'yarn-error.log*',
     '.DS_Store',
-    'build',
     'dist',
+    'build',
     'coverage'
   ];
 
-  // Read existing .gitignore or create a new one
-  let existingContent = '';
-  if (fs.existsSync(gitignorePath)) {
-    existingContent = fs.readFileSync(gitignorePath, 'utf8');
-  } else {
-    console.log('⚠️ No .gitignore found. Creating a new one...');
+  // Check if .gitignore exists
+  const gitignorePath = path.join(process.cwd(), '.gitignore');
+  let gitignoreContent = '';
+
+  try {
+    gitignoreContent = fs.readFileSync(gitignorePath, 'utf8');
+  } catch (error) {
+    if (shouldEnforce) {
+      console.error('❌ ERROR: .gitignore file not found!');
+      console.error('Please create a .gitignore file with essential patterns.');
+      console.error('\nRecommended patterns:');
+      essentialPatterns.forEach(pattern => console.error(`  ${pattern}`));
+      console.error('\nYou can bypass this check with git commit --no-verify, but this is not recommended.');
+      console.error('Alternatively, set enforce: false for gitignore in hooks-config.js to make this a warning only.');
+      process.exit(1);
+    } else {
+      console.warn('⚠️ WARNING: .gitignore file not found!');
+      console.warn('Consider creating a .gitignore file with essential patterns.');
+      console.warn('\nRecommended patterns:');
+      essentialPatterns.forEach(pattern => console.warn(`  ${pattern}`));
+      console.warn('\nThis is just a warning and will not prevent your commit.');
+      console.warn('To enforce gitignore checks, set enforce: true for gitignore in hooks-config.js.');
+      return;
+    }
   }
 
-  // Check which patterns are missing
+  // Check if all essential patterns are in .gitignore
   const missingPatterns = [];
-  for (const pattern of essentialPatterns) {
-    if (!existingContent.includes(pattern)) {
+
+  essentialPatterns.forEach(pattern => {
+    // Check if pattern is in .gitignore
+    // We need to handle comments and empty lines
+    const lines = gitignoreContent.split('\n');
+    const patternFound = lines.some(line => {
+      const trimmedLine = line.trim();
+      return trimmedLine === pattern || trimmedLine.startsWith(`${pattern}/`);
+    });
+
+    if (!patternFound) {
       missingPatterns.push(pattern);
     }
-  }
+  });
 
-  // Add missing patterns if any
   if (missingPatterns.length > 0) {
-    console.log('⚠️ Adding missing patterns to .gitignore:', missingPatterns.join(', '));
-    
-    // Add a header for our additions
-    let additions = '';
-    if (existingContent && !existingContent.endsWith('\n')) {
-      additions += '\n';
+    if (shouldEnforce) {
+      console.error('❌ ERROR: .gitignore is missing essential patterns:');
+      missingPatterns.forEach(pattern => console.error(`  ${pattern}`));
+      console.error('\nPlease add these patterns to your .gitignore file.');
+      console.error('You can bypass this check with git commit --no-verify, but this is not recommended.');
+      console.error('Alternatively, set enforce: false for gitignore in hooks-config.js to make this a warning only.');
+      process.exit(1);
+    } else {
+      console.warn('⚠️ WARNING: .gitignore is missing essential patterns:');
+      missingPatterns.forEach(pattern => console.warn(`  ${pattern}`));
+      console.warn('\nConsider adding these patterns to your .gitignore file.');
+      console.warn('This is just a warning and will not prevent your commit.');
+      console.warn('To enforce gitignore checks, set enforce: true for gitignore in hooks-config.js.');
     }
-    additions += '# Added by React Build Git Hooks\n';
-    
-    // Add each missing pattern
-    for (const pattern of missingPatterns) {
-      additions += pattern + '\n';
-    }
-    
-    // Write the updated content
-    fs.writeFileSync(gitignorePath, existingContent + additions);
-    console.log('✅ .gitignore updated successfully!');
   } else {
     console.log('✅ .gitignore already contains all essential patterns.');
   }
 })().catch(error => {
   console.error('❌ Error:', error.message);
-  process.exit(1);
+  // Don't exit with error to allow the command to continue
 });

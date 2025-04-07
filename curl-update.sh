@@ -51,57 +51,37 @@ if [ -f "package.json" ] && grep -q '"type": "module"' package.json; then
     echo "📦 Detected ES modules project"
 fi
 
-# Copy and potentially convert the scripts
-if [ "$is_esm" = true ]; then
-    # Convert check-gitignore.js to ES modules
-    sed -e 's/const { execSync } = require(["\x27]child_process["\x27]);/import { execSync } from "child_process";/g' \
-        -e 's/const fs = require(["\x27]fs["\x27]);/import fs from "fs";/g' \
-        -e 's/const path = require(["\x27]path["\x27]);/import path from "path";/g' \
-        "$temp_dir/scripts/check-gitignore.js" > "scripts/check-gitignore.js"
-    
-    # Convert build-react-apps.js to ES modules
-    sed -e 's/const { execSync } = require(["\x27]child_process["\x27]);/import { execSync } from "child_process";/g' \
-        -e 's/const fs = require(["\x27]fs["\x27]);/import fs from "fs";/g' \
-        -e 's/const path = require(["\x27]path["\x27]);/import path from "path";/g' \
-        "$temp_dir/scripts/build-react-apps.js" > "scripts/build-react-apps.js"
-    
-    # Convert check-lowercase.js to ES modules
-    sed -e 's/const { execSync } = require(["\x27]child_process["\x27]);/import { execSync } from "child_process";/g' \
-        -e 's/const fs = require(["\x27]fs["\x27]);/import fs from "fs";/g' \
-        -e 's/const path = require(["\x27]path["\x27]);/import path from "path";/g' \
-        "$temp_dir/scripts/check-lowercase.js" > "scripts/check-lowercase.js"
-    
-    # Convert git-reminder.js to ES modules
-    sed -e 's/const { execSync } = require(["\x27]child_process["\x27]);/import { execSync } from "child_process";/g' \
-        -e 's/const fs = require(["\x27]fs["\x27]);/import fs from "fs";/g' \
-        -e 's/const path = require(["\x27]path["\x27]);/import path from "path";/g' \
-        "$temp_dir/scripts/git-reminder.js" > "scripts/git-reminder.js"
-    
-    # Create templates directory if it doesn't exist
-    mkdir -p templates
-    
-    # Copy template files
-    cp "$temp_dir/templates/pre-commands.js" "templates/pre-commands.js"
-    
-    echo "✅ Updated scripts (converted to ES modules)"
+# Copy scripts
+mkdir -p scripts
+cp -f "$temp_dir/scripts/build-react-apps.js" "scripts/"
+cp -f "$temp_dir/scripts/check-gitignore.js" "scripts/"
+cp -f "$temp_dir/scripts/check-lowercase.js" "scripts/"
+cp -f "$temp_dir/scripts/git-reminder.js" "scripts/"
+
+# Copy templates
+mkdir -p templates
+cp -f "$temp_dir/templates/pre-commands.js" "templates/"
+
+# Copy configuration files (don't overwrite existing ones)
+if [ ! -f "hooks-config.js" ]; then
+  cp -f "$temp_dir/hooks-config.js" "."
+  echo "✅ Created hooks-config.js configuration file"
 else
-    # Copy scripts as-is for CommonJS
-    cp "$temp_dir/scripts/check-gitignore.js" "scripts/check-gitignore.js"
-    cp "$temp_dir/scripts/build-react-apps.js" "scripts/build-react-apps.js"
-    cp "$temp_dir/scripts/check-lowercase.js" "scripts/check-lowercase.js"
-    cp "$temp_dir/scripts/git-reminder.js" "scripts/git-reminder.js"
-    
-    # Create templates directory if it doesn't exist
-    mkdir -p templates
-    
-    # Copy template files
-    cp "$temp_dir/templates/pre-commands.js" "templates/pre-commands.js"
-    
-    echo "✅ Updated scripts"
+  echo "ℹ️ Existing hooks-config.js file preserved"
+fi
+
+if [ ! -f "hooks-config.mjs" ]; then
+  cp -f "$temp_dir/hooks-config.mjs" "."
+  echo "✅ Created hooks-config.mjs configuration file"
+else
+  echo "ℹ️ Existing hooks-config.mjs file preserved"
 fi
 
 # Make scripts executable
-chmod +x "scripts/check-gitignore.js" "scripts/build-react-apps.js" "scripts/check-lowercase.js" "scripts/git-reminder.js"
+chmod +x "scripts/build-react-apps.js"
+chmod +x "scripts/check-gitignore.js"
+chmod +x "scripts/check-lowercase.js"
+chmod +x "scripts/git-reminder.js"
 
 # Update package.json scripts
 if [ -f "package.json" ]; then

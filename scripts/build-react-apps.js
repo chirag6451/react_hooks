@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * This script finds all React apps in the repository and runs their build commands
+ * This script builds React apps in a monorepo or standalone project
+ * It will warn or block commits based on configuration
  */
 
 // Module-agnostic imports (works in both CommonJS and ES Module environments)
@@ -26,100 +27,239 @@ const requireOrImport = async (moduleName) => {
   // Import modules dynamically
   const fs = await requireOrImport('fs');
   const path = await requireOrImport('path');
-  const { execSync } = await requireOrImport('child_process');
+  const { execSync, spawn } = await requireOrImport('child_process');
 
-  // Get the git root directory
-  const gitRootDir = execSync('git rev-parse --show-toplevel').toString().trim();
+  // Load configuration
+  let config = {
+    build: {
+      enforce: true,
+      enabled: true
+    }
+  };
 
-  // Function to find all package.json files
-  function findPackageJsonFiles(dir, fileList = []) {
-    const files = fs.readdirSync(dir);
-    
-    files.forEach(file => {
-      const filePath = path.join(dir, file);
-      const stat = fs.statSync(filePath);
-      
-      if (stat.isDirectory() && file !== 'node_modules' && file !== '.git') {
-        findPackageJsonFiles(filePath, fileList);
-      } else if (file === 'package.json') {
-        fileList.push(dir);
-      }
-    });
-    
-    return fileList;
-  }
-
-  // Find all React apps (directories with package.json that have react as a dependency)
-  function findReactApps() {
-    const packageDirs = findPackageJsonFiles(gitRootDir);
-    const reactApps = [];
-    
-    packageDirs.forEach(dir => {
+  try {
+    // Try to load CommonJS config
+    if (typeof require !== 'undefined') {
       try {
-        const packageJson = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
-        
-        // Check if it's a React app
-        if (
-          (packageJson.dependencies && packageJson.dependencies.react) ||
-          (packageJson.devDependencies && packageJson.devDependencies.react)
-        ) {
-          // Check if it has a build script
-          if (packageJson.scripts && packageJson.scripts.build) {
-            reactApps.push({
-              dir,
-              buildScript: 'build'
-            });
-          }
+        const configPath = path.join(process.cwd(), 'hooks-config.js');
+        if (fs.existsSync(configPath)) {
+          config = require(configPath);
         }
       } catch (error) {
-        console.error(`Error processing ${dir}/package.json:`, error.message);
+        // Ignore error, use default config
       }
-    });
-    
-    return reactApps;
-  }
-
-  // Main function to build all React apps
-  function buildReactApps() {
-    console.log('🔍 Finding React apps in the repository...');
-    const reactApps = findReactApps();
-    
-    if (reactApps.length === 0) {
-      console.log('⚠️ No React apps found with build scripts.');
-      return true;
-    }
-    
-    console.log(`🚀 Found ${reactApps.length} React app(s). Building...`);
-    
-    let allBuildsSuccessful = true;
-    
-    reactApps.forEach(app => {
-      console.log(`\n📦 Building ${path.relative(gitRootDir, app.dir)} (npm run ${app.buildScript})`);
-      
-      try {
-        // Use direct npm command to avoid recursive calls
-        execSync(`cd "${app.dir}" && npm run ${app.buildScript}`, { stdio: 'inherit' });
-        console.log(`✅ Build successful for ${path.relative(gitRootDir, app.dir)}`);
-      } catch (error) {
-        console.error(`❌ Build failed for ${path.relative(gitRootDir, app.dir)}`);
-        allBuildsSuccessful = false;
-      }
-    });
-    
-    if (allBuildsSuccessful) {
-      console.log('\n✅ All React apps built successfully!');
-      return true;
     } else {
-      console.error('\n❌ Some builds failed. Please fix the issues before committing.');
-      return false;
+      // Try to load ES Module config
+      try {
+        const configPath = path.join(process.cwd(), 'hooks-config.mjs');
+        if (fs.existsSync(configPath)) {
+          const importedConfig = await import(configPath);
+          config = importedConfig.default;
+        }
+      } catch (error) {
+        // Ignore error, use default config
+      }
     }
+  } catch (error) {
+    // Ignore error, use default config
   }
 
-  // Run the build process and exit with appropriate code
-  if (!buildReactApps()) {
-    process.exit(1);
+  // Check if the hook is disabled
+  if (!config.build || config.build.enabled === false) {
+    console.log('ℹ️ Build verification is disabled in hooks-config.js');
+    return;
+  }
+
+  // Determine if we should enforce or just warn
+  const shouldEnforce = config.build && config.build.enforce === true;
+
+  // Get staged files
+  const stagedFiles = execSync('git diff --cached --name-only')
+    .toString()
+    .trim()
+    .split('\n')
+    .filter(Boolean);
+
+  // Check if any JS/TS files are staged
+  const hasJsChanges = stagedFiles.some(file => 
+    /\.(js|jsx|ts|tsx|vue|svelte)$/.test(file) && 
+    !file.includes('node_modules/')
+  );
+
+  if (!hasJsChanges) {
+    console.log('ℹ️ No JavaScript/TypeScript changes detected. Skipping build check.');
+    return;
+  }
+
+  console.log('🔍 Checking for React apps to build...');
+
+  // Check if this is a monorepo with multiple apps
+  const isMonorepo = fs.existsSync('lerna.json') || 
+                    (fs.existsSync('package.json') && 
+                     JSON.parse(fs.readFileSync('package.json', 'utf8')).workspaces);
+
+  let buildCommand = 'npm run build';
+  let buildSuccessful = false;
+
+  try {
+    if (isMonorepo) {
+      console.log('📦 Detected monorepo structure');
+      
+      // For monorepos, find affected apps and build them
+      let appsToCheck = [];
+      
+      if (fs.existsSync('lerna.json')) {
+        // Lerna monorepo
+        const packages = JSON.parse(execSync('npx lerna list --json').toString());
+        appsToCheck = packages.map(pkg => pkg.location);
+      } else {
+        // Yarn/npm workspaces
+        const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+        const workspaces = packageJson.workspaces;
+        
+        if (Array.isArray(workspaces)) {
+          // Simple array of workspace patterns
+          for (const pattern of workspaces) {
+            const matches = execSync(`find ${pattern} -name "package.json" -not -path "*/node_modules/*"`)
+              .toString()
+              .trim()
+              .split('\n')
+              .filter(Boolean);
+            
+            for (const match of matches) {
+              appsToCheck.push(path.dirname(match));
+            }
+          }
+        } else if (workspaces && workspaces.packages) {
+          // Object with packages array
+          for (const pattern of workspaces.packages) {
+            const matches = execSync(`find ${pattern} -name "package.json" -not -path "*/node_modules/*"`)
+              .toString()
+              .trim()
+              .split('\n')
+              .filter(Boolean);
+            
+            for (const match of matches) {
+              appsToCheck.push(path.dirname(match));
+            }
+          }
+        }
+      }
+      
+      // Filter to only apps with build scripts and affected by staged files
+      const appsToBuild = [];
+      
+      for (const appPath of appsToCheck) {
+        const packageJsonPath = path.join(appPath, 'package.json');
+        
+        if (fs.existsSync(packageJsonPath)) {
+          const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+          
+          if (packageJson.scripts && packageJson.scripts.build) {
+            // Check if any staged files affect this app
+            const appRelativePath = path.relative(process.cwd(), appPath);
+            const isAffected = stagedFiles.some(file => 
+              file.startsWith(appRelativePath) || 
+              file.includes('shared') || 
+              file.includes('common')
+            );
+            
+            if (isAffected) {
+              appsToBuild.push(appPath);
+            }
+          }
+        }
+      }
+      
+      if (appsToBuild.length === 0) {
+        console.log('ℹ️ No affected React apps with build scripts found');
+        buildSuccessful = true;
+      } else {
+        console.log(`🏗️ Building ${appsToBuild.length} affected React app(s)...`);
+        
+        // Build each affected app
+        for (const appPath of appsToBuild) {
+          const appName = path.basename(appPath);
+          console.log(`\n🔨 Building ${appName}...`);
+          
+          try {
+            execSync('npm run build', { 
+              cwd: appPath, 
+              stdio: 'inherit'
+            });
+            console.log(`✅ Successfully built ${appName}`);
+          } catch (error) {
+            if (shouldEnforce) {
+              console.error(`\n❌ ERROR: Failed to build ${appName}`);
+              console.error('Please fix the build errors before committing.');
+              console.error('You can bypass this check with git commit --no-verify, but this is not recommended.');
+              console.error('Alternatively, set enforce: false for build in hooks-config.js to make this a warning only.');
+              process.exit(1);
+            } else {
+              console.warn(`\n⚠️ WARNING: Failed to build ${appName}`);
+              console.warn('Consider fixing the build errors before committing.');
+              console.warn('This is just a warning and will not prevent your commit.');
+              console.warn('To enforce build verification, set enforce: true for build in hooks-config.js.');
+            }
+            return;
+          }
+        }
+        
+        buildSuccessful = true;
+      }
+    } else {
+      // Single app
+      console.log('🏗️ Building React app...');
+      
+      // Check if package.json exists and has a build script
+      if (fs.existsSync('package.json')) {
+        const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+        
+        if (packageJson.scripts && packageJson.scripts.build) {
+          try {
+            execSync('npm run build', { stdio: 'inherit' });
+            console.log('✅ Build successful!');
+            buildSuccessful = true;
+          } catch (error) {
+            if (shouldEnforce) {
+              console.error('\n❌ ERROR: Build failed!');
+              console.error('Please fix the build errors before committing.');
+              console.error('You can bypass this check with git commit --no-verify, but this is not recommended.');
+              console.error('Alternatively, set enforce: false for build in hooks-config.js to make this a warning only.');
+              process.exit(1);
+            } else {
+              console.warn('\n⚠️ WARNING: Build failed!');
+              console.warn('Consider fixing the build errors before committing.');
+              console.warn('This is just a warning and will not prevent your commit.');
+              console.warn('To enforce build verification, set enforce: true for build in hooks-config.js.');
+            }
+          }
+        } else {
+          console.log('ℹ️ No build script found in package.json');
+          buildSuccessful = true;
+        }
+      } else {
+        console.log('ℹ️ No package.json found');
+        buildSuccessful = true;
+      }
+    }
+    
+    if (buildSuccessful) {
+      console.log('\n🎉 All builds completed successfully!');
+    }
+  } catch (error) {
+    if (shouldEnforce) {
+      console.error('\n❌ ERROR: Failed to check or build React apps:', error.message);
+      console.error('You can bypass this check with git commit --no-verify, but this is not recommended.');
+      console.error('Alternatively, set enforce: false for build in hooks-config.js to make this a warning only.');
+      process.exit(1);
+    } else {
+      console.warn('\n⚠️ WARNING: Failed to check or build React apps:', error.message);
+      console.warn('This is just a warning and will not prevent your commit.');
+      console.warn('To enforce build verification, set enforce: true for build in hooks-config.js.');
+    }
   }
 })().catch(error => {
   console.error('❌ Error:', error.message);
-  process.exit(1);
+  // Don't exit with error to allow the command to continue
 });

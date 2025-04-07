@@ -68,14 +68,91 @@ This helps teams maintain high-quality code and prevents accidental exposure of 
 
 ## Features
 
-- **Build Verification**: Automatically builds all React apps in your repository before each commit to ensure they compile successfully.
-- **Gitignore Check**: Verifies that your `.gitignore` file contains essential patterns to prevent sensitive files from being committed.
-- **Lowercase Suggestions**: Provides friendly warnings when file names and import statements don't use lowercase, without blocking your workflow.
-- **Git Reminders**: Encourages regular commits and notifies about uncommitted changes to prevent code loss.
-- **Easy Installation**: Simple installation process for both new and existing projects.
-- **Module-Agnostic**: Works with both CommonJS and ES Module projects.
-- **Easy Updates**: Simple update mechanism to get the latest features and bug fixes.
-- **Uninstallation Option**: Clean removal process if you no longer want to use the hooks.
+- 🔍 **Build Verification**: Automatically builds your React apps before committing to ensure there are no build errors
+- 🛡️ **Security Check**: Ensures your `.gitignore` file contains essential patterns to prevent sensitive files from being committed
+- 📝 **Lowercase Suggestions**: Provides warnings for files with uppercase names and import statements to maintain consistency
+- ⏰ **Git Reminders**: Reminds you to commit regularly and checks for uncommitted changes
+- ⚙️ **Configurable Hooks**: Control whether hooks block commits or just provide warnings via the configuration file
+
+## Configuration
+
+You can customize the behavior of each hook using the `hooks-config.js` (or `hooks-config.mjs` for ES modules) file that is installed in your project root.
+
+### Configuration Options
+
+```js
+module.exports = {
+  // Build verification hook
+  build: {
+    enforce: true, // Block commits if build fails
+    enabled: true  // Enable build verification
+  },
+  
+  // Gitignore check hook
+  gitignore: {
+    enforce: true, // Block commits if .gitignore is missing essential patterns
+    enabled: true  // Enable gitignore check
+  },
+  
+  // Lowercase check hook
+  lowercase: {
+    enforce: false, // Only warn about uppercase file names and imports
+    enabled: true   // Enable lowercase check
+  },
+  
+  // Git reminder hook
+  gitReminder: {
+    enforce: false, // Only provide reminders, don't block commits
+    enabled: true,  // Enable git reminders
+    
+    // Additional settings for git reminder
+    settings: {
+      hoursThreshold: 4 // Warn if last commit was more than 4 hours ago
+    }
+  }
+};
+```
+
+### Configuration Properties
+
+For each hook, you can set:
+
+- `enforce`: When `true`, the hook will block commits if issues are found. When `false`, it will only show warnings.
+- `enabled`: When `true`, the hook is active. When `false`, the hook is completely disabled.
+
+The Git reminder hook also has additional settings:
+
+- `hoursThreshold`: Number of hours since the last commit before showing a warning.
+
+### Example: Enforcing Lowercase Names
+
+If you want to enforce lowercase file names and import paths, update your configuration:
+
+```js
+module.exports = {
+  // ... other config
+  lowercase: {
+    enforce: true, // Block commits if uppercase names are found
+    enabled: true
+  }
+  // ... other config
+};
+```
+
+### Example: Disabling a Hook
+
+If you want to disable the build verification hook:
+
+```js
+module.exports = {
+  // ... other config
+  build: {
+    enforce: false,
+    enabled: false // Completely disable build verification
+  }
+  // ... other config
+};
+```
 
 ## Table of Contents
 

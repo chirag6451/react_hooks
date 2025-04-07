@@ -3,6 +3,7 @@
 /**
  * This script reminds users to commit their code regularly
  * and checks for uncommitted changes
+ * It will warn or block commits based on configuration
  */
 
 // Module-agnostic imports (works in both CommonJS and ES Module environments)
@@ -25,7 +26,59 @@ const requireOrImport = async (moduleName) => {
 // Self-invoking async function to allow top-level await
 (async () => {
   // Import modules dynamically
+  const fs = await requireOrImport('fs');
+  const path = await requireOrImport('path');
   const { execSync } = await requireOrImport('child_process');
+
+  // Load configuration
+  let config = {
+    gitReminder: {
+      enforce: false,
+      enabled: true,
+      settings: {
+        hoursThreshold: 4
+      }
+    }
+  };
+
+  try {
+    // Try to load CommonJS config
+    if (typeof require !== 'undefined') {
+      try {
+        const configPath = path.join(process.cwd(), 'hooks-config.js');
+        if (fs.existsSync(configPath)) {
+          config = require(configPath);
+        }
+      } catch (error) {
+        // Ignore error, use default config
+      }
+    } else {
+      // Try to load ES Module config
+      try {
+        const configPath = path.join(process.cwd(), 'hooks-config.mjs');
+        if (fs.existsSync(configPath)) {
+          const importedConfig = await import(configPath);
+          config = importedConfig.default;
+        }
+      } catch (error) {
+        // Ignore error, use default config
+      }
+    }
+  } catch (error) {
+    // Ignore error, use default config
+  }
+
+  // Check if the hook is disabled
+  if (!config.gitReminder || config.gitReminder.enabled === false) {
+    console.log('ℹ️ Git reminder is disabled in hooks-config.js');
+    return;
+  }
+
+  // Get the hours threshold from config
+  const hoursThreshold = config.gitReminder.settings?.hoursThreshold || 4;
+  
+  // Determine if we should enforce or just warn
+  const shouldEnforce = config.gitReminder && config.gitReminder.enforce === true;
 
   console.log('🔍 Checking Git status...');
 
@@ -53,29 +106,39 @@ const requireOrImport = async (moduleName) => {
     }
     
     const now = new Date();
+    let hasIssues = false;
     
     // Display warnings based on the checks
     if (changes) {
-      console.warn('\n⚠️ You have uncommitted changes:');
+      if (shouldEnforce) {
+        console.error('\n❌ ERROR: You have uncommitted changes:');
+      } else {
+        console.warn('\n⚠️ You have uncommitted changes:');
+      }
       
       // Show a summary of changes
       const changedFiles = changes.split('\n').length;
-      console.warn(`📝 ${changedFiles} file(s) modified`);
+      console[shouldEnforce ? 'error' : 'warn'](`📝 ${changedFiles} file(s) modified`);
       
       // Show actual changes (limited to avoid overwhelming output)
       const statusOutput = execSync('git status -s').toString().trim();
       const statusLines = statusOutput.split('\n');
       
       if (statusLines.length <= 10) {
-        console.warn('\nChanged files:');
-        statusLines.forEach(line => console.warn(`  ${line}`));
+        console[shouldEnforce ? 'error' : 'warn']('\nChanged files:');
+        statusLines.forEach(line => console[shouldEnforce ? 'error' : 'warn'](`  ${line}`));
       } else {
-        console.warn('\nChanged files (showing first 10):');
-        statusLines.slice(0, 10).forEach(line => console.warn(`  ${line}`));
-        console.warn(`  ... and ${statusLines.length - 10} more files`);
+        console[shouldEnforce ? 'error' : 'warn']('\nChanged files (showing first 10):');
+        statusLines.slice(0, 10).forEach(line => console[shouldEnforce ? 'error' : 'warn'](`  ${line}`));
+        console[shouldEnforce ? 'error' : 'warn'](`  ... and ${statusLines.length - 10} more files`);
       }
       
-      console.warn('\n👉 Consider committing your changes before continuing.');
+      if (shouldEnforce) {
+        console.error('\n❌ Please commit your changes before continuing.');
+        hasIssues = true;
+      } else {
+        console.warn('\n👉 Consider committing your changes before continuing.');
+      }
     } else {
       console.log('✅ Working directory is clean. No uncommitted changes.');
     }
@@ -83,9 +146,15 @@ const requireOrImport = async (moduleName) => {
     if (lastCommitTime) {
       const hoursAgo = ((now - lastCommitTime) / (1000 * 60 * 60)).toFixed(1);
       
-      if (hoursAgo > 4) {
-        console.warn(`\n⏰ It's been ${hoursAgo} hours since your last commit.`);
-        console.warn('🧠 Remember to commit often to avoid losing progress!');
+      if (hoursAgo > hoursThreshold) {
+        if (shouldEnforce) {
+          console.error(`\n❌ ERROR: It's been ${hoursAgo} hours since your last commit.`);
+          console.error('You should commit more frequently to avoid losing progress!');
+          hasIssues = true;
+        } else {
+          console.warn(`\n⏰ It's been ${hoursAgo} hours since your last commit.`);
+          console.warn('🧠 Remember to commit often to avoid losing progress!');
+        }
       } else {
         console.log(`✅ Last commit was ${hoursAgo} hours ago.`);
       }
@@ -96,8 +165,14 @@ const requireOrImport = async (moduleName) => {
         const behindCount = execSync('git rev-list --count HEAD..@{u}').toString().trim();
         
         if (parseInt(behindCount) > 0) {
-          console.warn(`\n⚠️ Your branch is behind by ${behindCount} commit(s).`);
-          console.warn('👉 Consider running git pull to get the latest changes.');
+          if (shouldEnforce) {
+            console.error(`\n❌ ERROR: Your branch is behind by ${behindCount} commit(s).`);
+            console.error('You should pull the latest changes before continuing.');
+            hasIssues = true;
+          } else {
+            console.warn(`\n⚠️ Your branch is behind by ${behindCount} commit(s).`);
+            console.warn('👉 Consider running git pull to get the latest changes.');
+          }
         }
       } catch (error) {
         // Ignore errors when checking for unpulled changes
@@ -106,6 +181,14 @@ const requireOrImport = async (moduleName) => {
     }
     
     console.log('\n🔍 Git check complete.');
+    
+    // Exit with error if we should enforce and have issues
+    if (shouldEnforce && hasIssues) {
+      console.error('\n❌ Git checks failed. Please fix the issues before continuing.');
+      console.error('You can bypass this check with git commit --no-verify, but this is not recommended.');
+      console.error('Alternatively, set enforce: false for gitReminder in hooks-config.js to make this a warning only.');
+      process.exit(1);
+    }
     
   } catch (error) {
     console.error('❌ Error checking Git status:', error.message);

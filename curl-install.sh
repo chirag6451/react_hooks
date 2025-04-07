@@ -48,20 +48,31 @@ echo -e "\nCreating temporary directory: $temp_dir"
 # Download the necessary files
 echo "📥 Downloading scripts..."
 
-# Create scripts directory if it doesn't exist
-mkdir -p scripts
-
-# Create templates directory if it doesn't exist
-mkdir -p templates
-
 # Download the scripts
 echo "📥 Downloading scripts..."
 REPO_URL="https://raw.githubusercontent.com/chirag6451/react_hooks/main"
-curl -s "$REPO_URL/scripts/build-react-apps.js" -o "scripts/build-react-apps.js"
-curl -s "$REPO_URL/scripts/check-gitignore.js" -o "scripts/check-gitignore.js"
-curl -s "$REPO_URL/scripts/check-lowercase.js" -o "scripts/check-lowercase.js"
-curl -s "$REPO_URL/scripts/git-reminder.js" -o "scripts/git-reminder.js"
-curl -s "$REPO_URL/templates/pre-commands.js" -o "templates/pre-commands.js"
+curl -s "$REPO_URL/scripts/build-react-apps.js" -o "$temp_dir/scripts/build-react-apps.js"
+curl -s "$REPO_URL/scripts/check-gitignore.js" -o "$temp_dir/scripts/check-gitignore.js"
+curl -s "$REPO_URL/scripts/check-lowercase.js" -o "$temp_dir/scripts/check-lowercase.js"
+curl -s "$REPO_URL/scripts/git-reminder.js" -o "$temp_dir/scripts/git-reminder.js"
+curl -s "$REPO_URL/templates/pre-commands.js" -o "$temp_dir/templates/pre-commands.js"
+curl -s "$REPO_URL/hooks-config.js" -o "$temp_dir/hooks-config.js"
+curl -s "$REPO_URL/hooks-config.mjs" -o "$temp_dir/hooks-config.mjs"
+
+# Copy scripts
+mkdir -p scripts
+cp -f "$temp_dir/scripts/build-react-apps.js" scripts/
+cp -f "$temp_dir/scripts/check-gitignore.js" scripts/
+cp -f "$temp_dir/scripts/check-lowercase.js" scripts/
+cp -f "$temp_dir/scripts/git-reminder.js" scripts/
+
+# Copy templates
+mkdir -p templates
+cp -f "$temp_dir/templates/pre-commands.js" templates/
+
+# Copy configuration files
+cp -f "$temp_dir/hooks-config.js" ./
+cp -f "$temp_dir/hooks-config.mjs" ./
 
 # Make scripts executable
 chmod +x scripts/build-react-apps.js
