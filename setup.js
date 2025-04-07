@@ -24,10 +24,51 @@ try {
   process.exit(1);
 }
 
-// Make scripts directory executable
+// Create scripts directory if it doesn't exist
+const scriptsDir = path.join(process.cwd(), 'scripts');
+if (!fs.existsSync(scriptsDir)) {
+  fs.mkdirSync(scriptsDir, { recursive: true });
+}
+
+// Copy scripts
+fs.copyFileSync(
+  path.join(__dirname, 'scripts', 'build-react-apps.js'),
+  path.join(scriptsDir, 'build-react-apps.js')
+);
+
+fs.copyFileSync(
+  path.join(__dirname, 'scripts', 'check-gitignore.js'),
+  path.join(scriptsDir, 'check-gitignore.js')
+);
+
+fs.copyFileSync(
+  path.join(__dirname, 'scripts', 'check-lowercase.js'),
+  path.join(scriptsDir, 'check-lowercase.js')
+);
+
+fs.copyFileSync(
+  path.join(__dirname, 'scripts', 'git-reminder.js'),
+  path.join(scriptsDir, 'git-reminder.js')
+);
+
+// Create templates directory if it doesn't exist
+const templatesDir = path.join(process.cwd(), 'templates');
+if (!fs.existsSync(templatesDir)) {
+  fs.mkdirSync(templatesDir, { recursive: true });
+}
+
+// Copy template files
+fs.copyFileSync(
+  path.join(__dirname, 'templates', 'pre-commands.js'),
+  path.join(templatesDir, 'pre-commands.js')
+);
+
+// Make scripts executable
 try {
-  fs.chmodSync(path.join(__dirname, 'scripts', 'build-react-apps.js'), '755');
-  fs.chmodSync(path.join(__dirname, 'scripts', 'check-gitignore.js'), '755');
+  fs.chmodSync(path.join(scriptsDir, 'build-react-apps.js'), '755');
+  fs.chmodSync(path.join(scriptsDir, 'check-gitignore.js'), '755');
+  fs.chmodSync(path.join(scriptsDir, 'check-lowercase.js'), '755');
+  fs.chmodSync(path.join(scriptsDir, 'git-reminder.js'), '755');
 } catch (error) {
   console.warn('⚠️ Could not make scripts executable. You may need to do this manually.');
 }
@@ -68,6 +109,9 @@ npm run check-lowercase
 
 # Run build for React apps directly
 npm run build
+
+# Run git reminder
+npm run git-reminder
 `;
 
     // Create the hook file
@@ -85,6 +129,7 @@ npm run build
   console.log('1. Check and update .gitignore for sensitive files');
   console.log('2. Check for lowercase file names and import statements');
   console.log('3. Enforce building React apps');
+  console.log('4. Run git reminder');
   console.log(`These checks will run before each ${hookType === 'pre-commit' ? 'commit' : 'push'}.`);
   console.log('\n👥 To distribute to your team, they just need to run:');
   console.log('   npm install');

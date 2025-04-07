@@ -85,10 +85,31 @@ try {
   );
   console.log('✅ Updated check-lowercase.js');
   
+  // Copy git-reminder.js
+  fs.copyFileSync(
+    path.join(tempDir, 'scripts', 'git-reminder.js'),
+    path.join(scriptsDir, 'git-reminder.js')
+  );
+  console.log('✅ Updated git-reminder.js');
+
+  // Create templates directory if it doesn't exist
+  const templatesDir = path.join(process.cwd(), 'templates');
+  if (!fs.existsSync(templatesDir)) {
+    fs.mkdirSync(templatesDir, { recursive: true });
+  }
+
+  // Copy template files
+  fs.copyFileSync(
+    path.join(tempDir, 'templates', 'pre-commands.js'),
+    path.join(templatesDir, 'pre-commands.js')
+  );
+  console.log('✅ Updated template files');
+
   // Make scripts executable
   fs.chmodSync(path.join(scriptsDir, 'build-react-apps.js'), '755');
   fs.chmodSync(path.join(scriptsDir, 'check-gitignore.js'), '755');
   fs.chmodSync(path.join(scriptsDir, 'check-lowercase.js'), '755');
+  fs.chmodSync(path.join(scriptsDir, 'git-reminder.js'), '755');
 } catch (error) {
   console.error('❌ Failed to update script files:', error.message);
 }
@@ -110,6 +131,10 @@ try {
     
     if (!packageJson.scripts['check-lowercase']) {
       packageJson.scripts['check-lowercase'] = 'node scripts/check-lowercase.js';
+    }
+    
+    if (!packageJson.scripts['git-reminder']) {
+      packageJson.scripts['git-reminder'] = 'node scripts/git-reminder.js';
     }
     
     // Remove build:dev script if it exists (to prevent infinite loop)
@@ -140,6 +165,9 @@ npm run check-lowercase
 
 # Run build for React apps directly
 npm run build
+
+# Run git reminder
+npm run git-reminder
 `;
   
   fs.writeFileSync(hookPath, hookContent);

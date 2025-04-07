@@ -74,11 +74,30 @@ fs.copyFileSync(
   path.join(scriptsDir, 'check-lowercase.js')
 );
 
+// Copy git-reminder.js to the target project
+fs.copyFileSync(
+  path.join(__dirname, 'scripts', 'git-reminder.js'),
+  path.join(scriptsDir, 'git-reminder.js')
+);
+
+// Create templates directory if it doesn't exist
+const templatesDir = path.join(targetDir, 'templates');
+if (!fs.existsSync(templatesDir)) {
+  fs.mkdirSync(templatesDir, { recursive: true });
+}
+
+// Copy template files
+fs.copyFileSync(
+  path.join(__dirname, 'templates', 'pre-commands.js'),
+  path.join(templatesDir, 'pre-commands.js')
+);
+
 // Make the scripts executable
 try {
   fs.chmodSync(path.join(scriptsDir, 'build-react-apps.js'), '755');
   fs.chmodSync(path.join(scriptsDir, 'check-gitignore.js'), '755');
   fs.chmodSync(path.join(scriptsDir, 'check-lowercase.js'), '755');
+  fs.chmodSync(path.join(scriptsDir, 'git-reminder.js'), '755');
 } catch (error) {
   console.warn('⚠️ Could not make scripts executable. You may need to do this manually.');
 }
@@ -98,6 +117,9 @@ if (!targetPackageJson.scripts['check-gitignore']) {
 }
 if (!targetPackageJson.scripts['check-lowercase']) {
   targetPackageJson.scripts['check-lowercase'] = 'node scripts/check-lowercase.js';
+}
+if (!targetPackageJson.scripts['git-reminder']) {
+  targetPackageJson.scripts['git-reminder'] = 'node scripts/git-reminder.js';
 }
 
 // Write updated package.json
@@ -130,6 +152,9 @@ npm run check-lowercase
 
 # Run build for React apps directly
 npm run build
+
+# Run git reminder
+npm run git-reminder
 `;
 
     // Create the hook file path
@@ -153,6 +178,7 @@ npm run build
   console.log('1. Check and update .gitignore for sensitive files');
   console.log('2. Check for lowercase file names and import statements');
   console.log('3. Enforce building React apps');
+  console.log('4. Run git reminder');
   console.log(`These checks will run before each ${hookType === 'pre-commit' ? 'commit' : 'push'}.`);
   console.log('\n👥 To distribute to your team, they just need to run:');
   console.log('   npm install');

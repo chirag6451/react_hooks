@@ -6,7 +6,7 @@
 ![Git Hooks](https://img.shields.io/badge/Git-Hooks-F05032?style=for-the-badge&logo=git)
 ![Node.js](https://img.shields.io/badge/Node.js-14+-339933?style=for-the-badge&logo=node.js)
 
-**Enforce React builds, secure .gitignore patterns, and suggest lowercase naming conventions before commits**
+**Enforce React builds, secure .gitignore patterns, suggest lowercase naming conventions, and remind about uncommitted changes before commits**
 
 </div>
 
@@ -46,25 +46,36 @@ Pre-commit hooks act like a gatekeeper to your codebase. They help catch issues 
 - Maintains consistent naming conventions across your codebase.
 - Provides helpful warnings without blocking your workflow.
 
+### 4. ⏰ Git Reminders
+✅ **Purpose**: Encourage regular commits and notify about uncommitted changes.
+
+**Why it matters**:
+- Prevents accidental code loss by reminding developers to commit frequently.
+- Helps maintain a clean Git history with smaller, more focused commits.
+- Notifies about uncommitted changes before starting work.
+- Alerts when your branch is behind the remote, preventing merge conflicts.
+
 ## Overview
 
-React Build Git Hooks is a powerful, zero-configuration solution that enforces three critical practices in your React projects:
+React Build Git Hooks is a powerful, zero-configuration solution that enforces four critical practices in your React projects:
 
-1. **Build Verification**: Automatically builds all React apps in your repository before commits/pushes to catch build errors early
-2. **Security Checks**: Ensures sensitive files (like `.env`, `node_modules`) are properly added to `.gitignore`
-3. **Lowercase Suggestions**: Provides friendly warnings when file names and import statements don't use lowercase, without blocking your workflow
+1. **Build Verification**: Automatically builds all React apps in your repository before each commit to ensure they compile successfully.
+2. **Security Checks**: Ensures sensitive files (like `.env`, `node_modules`) are properly added to `.gitignore`.
+3. **Lowercase Suggestions**: Provides friendly warnings when file names and import statements don't use lowercase, without blocking your workflow.
+4. **Git Reminders**: Encourages regular commits and notifies about uncommitted changes to prevent code loss.
 
 This helps teams maintain high-quality code and prevents accidental exposure of sensitive information.
 
 ## Features
 
-- **Auto-detection**: Automatically finds all React apps in your repository
-- **Smart Building**: Runs the appropriate build command for each app (`build:dev` or `build`)
-- **Security**: Checks and updates `.gitignore` to include sensitive files and directories
-- **Lowercase Suggestions**: Provides friendly warnings for non-lowercase file names and import statements
-- **Prevention**: Blocks commits/pushes if any build fails
-- **Easy Distribution**: Simple to install and share with your team
-- **Cross-Platform**: Works on macOS, Linux, and Windows
+- **Build Verification**: Automatically builds all React apps in your repository before each commit to ensure they compile successfully.
+- **Gitignore Check**: Verifies that your `.gitignore` file contains essential patterns to prevent sensitive files from being committed.
+- **Lowercase Suggestions**: Provides friendly warnings when file names and import statements don't use lowercase, without blocking your workflow.
+- **Git Reminders**: Encourages regular commits and notifies about uncommitted changes to prevent code loss.
+- **Easy Installation**: Simple installation process for both new and existing projects.
+- **Module-Agnostic**: Works with both CommonJS and ES Module projects.
+- **Easy Updates**: Simple update mechanism to get the latest features and bug fixes.
+- **Uninstallation Option**: Clean removal process if you no longer want to use the hooks.
 
 ## Table of Contents
 
@@ -197,7 +208,7 @@ npm install react-build-hooks --save-dev
 
 ## How It Works
 
-The hooks perform three main functions:
+The hooks perform four main functions:
 
 ### 1. .gitignore Check
 
@@ -240,6 +251,49 @@ After the build check, the hook:
 
 1. Scans your repository for file names and import statements that do not use lowercase
 2. If any are found, provides helpful warnings but allows the commit to proceed
+
+### 4. Git Reminders
+
+The Git reminder feature:
+
+<div align="center">
+<img src="https://mermaid.ink/img/pako:eNp1ksFOwzAMhl8lygmQJrXdYAc2DhwQEhI7wIVLaJzS0DYZSQZDiHfHaTfWFfmS-Pf3x3aOmTUWGeds63Dr8QlNh_CpcK1VBw0a2aGGa2UtathJ3cJFrRq4VRsJF8lnknwmF0mUigRWyogX1aGBO9UJeFW6hWfVCPki4UHuBDzITsCTaoVcq1bAUrVCbmQn4FF2Qj6rjYDvshPyRXVCvqhWwHe1EfBNtUK-qU7AD9UJ-awaIZ9VK-BVdUI-qVbAD9UJ-apaAc9qI-CbagX8VJ2QG9UKuFWdkE-qEfJVtQKeVSfks2qF_FCdkG-qFfBLbYRcq1bAH9UJuZGtkD9qK-BddUJuVSvkr9oI-a5aAX_VVsg_1Qn5p1oB_1Un5L_aCLlVrZB_aivkv-qE3KlWyIPqhPxRGyG3aivkQXVC7lUr5F51Qh5UJ-RRbYQ8qlbIo-qEPKlWyJPqhDypVsiT6oQ8qY2QJ9UKeVKtkCfVCXlSrZAn1Qn5D_GbyQA?type=png" alt="Git Reminder Flow" width="600">
+</div>
+
+1. Checks for uncommitted changes in your repository
+2. Notifies how long it's been since your last commit
+3. Checks if your branch is behind the remote
+4. Provides helpful warnings but allows the command to proceed
+
+## Using Pre-Command Hooks
+
+In addition to Git hooks, this package includes templates for setting up pre-command hooks in your `package.json`. These hooks run before npm commands like `npm run dev` or `npm run build` to remind developers to commit their code regularly.
+
+### Setting Up Pre-Command Hooks
+
+1. Check the `templates/pre-commands.js` file for examples of pre-command hooks.
+2. Add the relevant scripts to your `package.json` file:
+
+```json
+{
+  "scripts": {
+    "git-reminder": "node scripts/git-reminder.js",
+    "predev": "npm run git-reminder",
+    "dev": "your-dev-command",
+    "prebuild": "npm run git-reminder",
+    "build": "your-build-command"
+  }
+}
+```
+
+3. Now, whenever you run `npm run dev` or `npm run build`, the git-reminder script will run first, reminding you to commit your code regularly.
+
+### Benefits of Pre-Command Hooks
+
+- **Prevent Code Loss**: Regular reminders to commit code reduce the risk of losing work
+- **Cleaner Git History**: Encourages smaller, more focused commits
+- **Team Awareness**: Keeps everyone informed about their Git status
+- **No External Dependencies**: Works with npm's built-in pre/post hooks
 
 ## Team Distribution
 
@@ -353,6 +407,17 @@ const fileExtensions = [
   '.tsx',
   // ...existing file extensions
 ];
+```
+
+### Git Reminder
+
+Edit `scripts/git-reminder.js` to:
+- Change the time threshold for commit warnings
+- Modify the checks performed
+
+```javascript
+// Example: Change the time threshold
+const timeThreshold = 60 * 60 * 1000; // 1 hour
 ```
 
 ## 🗑️ Troubleshooting
