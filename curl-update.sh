@@ -65,16 +65,43 @@ if [ "$is_esm" = true ]; then
         -e 's/const path = require(["\x27]path["\x27]);/import path from "path";/g' \
         "$temp_dir/scripts/build-react-apps.js" > "scripts/build-react-apps.js"
     
+    # Convert check-lowercase.js to ES modules
+    sed -e 's/const { execSync } = require(["\x27]child_process["\x27]);/import { execSync } from "child_process";/g' \
+        -e 's/const fs = require(["\x27]fs["\x27]);/import fs from "fs";/g' \
+        -e 's/const path = require(["\x27]path["\x27]);/import path from "path";/g' \
+        "$temp_dir/scripts/check-lowercase.js" > "scripts/check-lowercase.js"
+    
+    # Convert git-reminder.js to ES modules
+    sed -e 's/const { execSync } = require(["\x27]child_process["\x27]);/import { execSync } from "child_process";/g' \
+        -e 's/const fs = require(["\x27]fs["\x27]);/import fs from "fs";/g' \
+        -e 's/const path = require(["\x27]path["\x27]);/import path from "path";/g' \
+        "$temp_dir/scripts/git-reminder.js" > "scripts/git-reminder.js"
+    
+    # Create templates directory if it doesn't exist
+    mkdir -p templates
+    
+    # Copy template files
+    cp "$temp_dir/templates/pre-commands.js" "templates/pre-commands.js"
+    
     echo "✅ Updated scripts (converted to ES modules)"
 else
     # Copy scripts as-is for CommonJS
     cp "$temp_dir/scripts/check-gitignore.js" "scripts/check-gitignore.js"
     cp "$temp_dir/scripts/build-react-apps.js" "scripts/build-react-apps.js"
+    cp "$temp_dir/scripts/check-lowercase.js" "scripts/check-lowercase.js"
+    cp "$temp_dir/scripts/git-reminder.js" "scripts/git-reminder.js"
+    
+    # Create templates directory if it doesn't exist
+    mkdir -p templates
+    
+    # Copy template files
+    cp "$temp_dir/templates/pre-commands.js" "templates/pre-commands.js"
+    
     echo "✅ Updated scripts"
 fi
 
 # Make scripts executable
-chmod +x "scripts/check-gitignore.js" "scripts/build-react-apps.js"
+chmod +x "scripts/check-gitignore.js" "scripts/build-react-apps.js" "scripts/check-lowercase.js" "scripts/git-reminder.js"
 
 # Update package.json scripts
 if [ -f "package.json" ]; then
@@ -94,6 +121,8 @@ if [ -f "package.json" ]; then
         
         // Update scripts
         packageJson.scripts['check-gitignore'] = 'node scripts/check-gitignore.js';
+        packageJson.scripts['check-lowercase'] = 'node scripts/check-lowercase.js';
+        packageJson.scripts['git-reminder'] = 'node scripts/git-reminder.js';
         
         // Remove build:dev script if it exists (to prevent infinite loop)
         if (packageJson.scripts['build:dev']) {
@@ -113,12 +142,19 @@ fi
 echo -e "\n📝 Updating $current_hook_type hook..."
 cat > ".husky/$current_hook_type" << 'EOF'
 #!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
 # Check .gitignore for sensitive files
 npm run check-gitignore
 
+# Check for lowercase file names and import statements
+npm run check-lowercase
+
 # Run build for React apps directly
 npm run build
+
+# Run git reminder
+npm run git-reminder
 EOF
 
 # Make the hook executable
@@ -133,4 +169,6 @@ echo -e "\nChanges in this update:"
 echo "- Fixed infinite build loop issue"
 echo "- Added Husky v10 compatibility"
 echo "- Improved error handling"
+echo "- Added lowercase naming suggestions"
+echo "- Added Git reminder feature"
 echo "- Added uninstallation options"
