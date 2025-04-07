@@ -52,22 +52,30 @@ try {
   process.exit(1);
 }
 
-// Copy build-react-apps.js to the target project
+// Create scripts directory if it doesn't exist
 const scriptsDir = path.join(targetDir, 'scripts');
 if (!fs.existsSync(scriptsDir)) {
   fs.mkdirSync(scriptsDir, { recursive: true });
 }
 
+// Copy build-react-apps.js to the target project
 fs.copyFileSync(
   path.join(__dirname, 'scripts', 'build-react-apps.js'),
   path.join(scriptsDir, 'build-react-apps.js')
 );
 
-// Make the script executable
+// Copy check-gitignore.js to the target project
+fs.copyFileSync(
+  path.join(__dirname, 'scripts', 'check-gitignore.js'),
+  path.join(scriptsDir, 'check-gitignore.js')
+);
+
+// Make the scripts executable
 try {
   fs.chmodSync(path.join(scriptsDir, 'build-react-apps.js'), '755');
+  fs.chmodSync(path.join(scriptsDir, 'check-gitignore.js'), '755');
 } catch (error) {
-  console.warn('⚠️ Could not make build script executable. You may need to do this manually.');
+  console.warn('⚠️ Could not make scripts executable. You may need to do this manually.');
 }
 
 // Update target package.json
@@ -79,6 +87,9 @@ if (!targetPackageJson.scripts) {
 targetPackageJson.scripts.prepare = 'husky install';
 if (!targetPackageJson.scripts['build:dev']) {
   targetPackageJson.scripts['build:dev'] = 'node scripts/build-react-apps.js';
+}
+if (!targetPackageJson.scripts['check-gitignore']) {
+  targetPackageJson.scripts['check-gitignore'] = 'node scripts/check-gitignore.js';
 }
 
 // Write updated package.json
@@ -98,17 +109,40 @@ rl.question('\n🤔 Which hook would you like to use?\n1. pre-commit (runs befor
     process.exit(1);
   }
   
-  // Add the hook
+  // Add the hooks
   try {
-    execSync(`npx husky add .husky/${hookType} "npm run build:dev"`, { cwd: targetDir, stdio: 'inherit' });
+    // Create the hook script content
+    const hookScript = `#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Check .gitignore for sensitive files
+npm run check-gitignore
+
+# Run build for React apps
+npm run build:dev
+`;
+
+    // Create the hook file path
+    const huskyDir = path.join(targetDir, '.husky');
+    if (!fs.existsSync(huskyDir)) {
+      fs.mkdirSync(huskyDir, { recursive: true });
+    }
+    
+    // Write the hook file
+    const hookPath = path.join(huskyDir, hookType);
+    fs.writeFileSync(hookPath, hookScript);
+    fs.chmodSync(hookPath, '755');
+    
     console.log(`✅ Successfully added ${hookType} hook!`);
   } catch (error) {
     console.error(`❌ Failed to add ${hookType} hook:`, error.message);
     process.exit(1);
   }
   
-  console.log('\n🎉 Setup complete! The Git hook will now enforce building React apps before each', 
-    hookType === 'pre-commit' ? 'commit.' : 'push.');
+  console.log('\n🎉 Setup complete! The Git hook will now:');
+  console.log('1. Check and update .gitignore for sensitive files');
+  console.log('2. Enforce building React apps');
+  console.log(`These checks will run before each ${hookType === 'pre-commit' ? 'commit' : 'push'}.`);
   console.log('\n👥 To distribute to your team, they just need to run:');
   console.log('   npm install');
   

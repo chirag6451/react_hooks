@@ -1,12 +1,13 @@
 # React Build Git Hooks
 
-This repository contains Git hooks that enforce running build commands for React apps before commits or pushes. This ensures that all team members verify their builds work before sharing code.
+This repository contains Git hooks that enforce running build commands for React apps before commits or pushes and ensure sensitive files are properly added to .gitignore. This ensures that all team members verify their builds work before sharing code and don't accidentally commit sensitive information.
 
 ## Features
 
 - Automatically finds all React apps in your repository
 - Runs the appropriate build command for each app (`build:dev` or `build`)
 - Prevents commits/pushes if any build fails
+- Checks and updates .gitignore to include sensitive files and directories
 - Easy to install and distribute to your team
 
 ## Installation Options
@@ -96,17 +97,34 @@ node /path/to/react-build-hooks/install-to-project.js
 
 ## How It Works
 
-The hook:
-1. Finds all React applications in your repository (by looking for package.json files with React dependencies)
-2. For each React app, runs either `npm run build:dev` or `npm run build` (preferring build:dev if available)
-3. Prevents the commit/push if any build fails
+The hooks perform two main functions:
+
+### 1. .gitignore Check
+
+Before each commit/push, the hook:
+- Checks if your .gitignore file includes essential patterns for sensitive files
+- Automatically adds any missing patterns to .gitignore
+- Adds the updated .gitignore to your commit
+
+The check includes patterns for:
+- Node.js files (node_modules, logs)
+- Environment files (.env, .env.local)
+- IDE files (.vscode, .idea)
+- Build outputs (dist, build)
+- And many more common patterns
+
+### 2. React Build Check
+
+After the gitignore check, the hook:
+- Finds all React applications in your repository
+- For each React app, runs either `npm run build:dev` or `npm run build`
+- Prevents the commit/push if any build fails
 
 ## Customization
 
-You can modify the `scripts/build-react-apps.js` file to customize:
-- How React apps are detected
-- Which build commands are run
-- Additional checks or validations
+You can modify the scripts to customize:
+- `scripts/build-react-apps.js` - How React apps are detected and built
+- `scripts/check-gitignore.js` - Which patterns are checked in .gitignore
 
 ## Troubleshooting
 
