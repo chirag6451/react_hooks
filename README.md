@@ -17,7 +17,7 @@ This repository contains Git hooks that enforce running build commands for React
 For the quickest installation, run this command in your project directory:
 
 ```bash
-curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/curl-install.sh | bash
+curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/curl-install.sh -o install.sh && bash install.sh
 ```
 
 This will download and install everything you need without having to clone the repository.
@@ -149,7 +149,7 @@ The `prepare` script will automatically set up Husky and the Git hooks.
 For macOS/Linux users, share this one-line command:
 
 ```bash
-curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/curl-install.sh | bash
+curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/curl-install.sh -o install.sh && bash install.sh
 ```
 
 Team members just need to run this command in their React project directory.
