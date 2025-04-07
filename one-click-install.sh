@@ -45,7 +45,7 @@ cd "$temp_dir"
 
 # Clone the repository
 echo "Cloning React Build Hooks repository..."
-if ! git clone https://gitlab.com/chirag-indapoint/react-hooks.git .; then
+if ! git clone https://github.com/chirag6451/react_hooks.git .; then
     echo "❌ ERROR: Failed to clone repository."
     cd - > /dev/null
     rm -rf "$temp_dir"

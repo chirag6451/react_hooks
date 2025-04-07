@@ -2,7 +2,7 @@
 
 # React Build Hooks - Curl Installer
 # This script can be run with:
-# curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/curl-install.sh | bash
+# curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/curl-install.sh | bash
 
 echo "==================================================="
 echo " React Build Hooks - Curl Installer"
@@ -53,17 +53,17 @@ mkdir -p scripts
 
 # Download build-react-apps.js
 echo "Downloading build-react-apps.js..."
-curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/scripts/build-react-apps.js -o scripts/build-react-apps.js
+curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/scripts/build-react-apps.js -o scripts/build-react-apps.js
 chmod +x scripts/build-react-apps.js
 
 # Download check-gitignore.js
 echo "Downloading check-gitignore.js..."
-curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/scripts/check-gitignore.js -o scripts/check-gitignore.js
+curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/scripts/check-gitignore.js -o scripts/check-gitignore.js
 chmod +x scripts/check-gitignore.js
 
 # Download update-package-json.js
 echo "Downloading update-package-json.js..."
-curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/scripts/update-package-json.js -o scripts/update-package-json.js
+curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/scripts/update-package-json.js -o scripts/update-package-json.js
 chmod +x scripts/update-package-json.js
 
 echo "✅ All scripts downloaded successfully"

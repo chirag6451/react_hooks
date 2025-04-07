@@ -43,7 +43,7 @@ cd /d "%temp_dir%"
 
 :: Clone the repository
 echo Cloning React Build Hooks repository...
-git clone https://gitlab.com/chirag-indapoint/react-hooks.git .
+git clone https://github.com/chirag6451/react_hooks.git .
 
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: Failed to clone repository.

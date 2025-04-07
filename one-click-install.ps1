@@ -59,7 +59,7 @@ Push-Location $tempDir
 # Clone the repository
 Write-Host "Cloning React Build Hooks repository..." -ForegroundColor Cyan
 try {
-    git clone https://gitlab.com/chirag-indapoint/react-hooks.git .
+    git clone https://github.com/chirag6451/react_hooks.git .
     Write-Host "✓ Repository cloned successfully" -ForegroundColor Green
 } catch {
     Write-Host "ERROR: Failed to clone repository." -ForegroundColor Red

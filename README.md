@@ -17,7 +17,7 @@ This repository contains Git hooks that enforce running build commands for React
 For the quickest installation, run this command in your project directory:
 
 ```bash
-curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/curl-install.sh -o install.sh && bash install.sh
+curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/curl-install.sh -o install.sh && bash install.sh
 ```
 
 This will download and install everything you need without having to clone the repository.
@@ -56,9 +56,9 @@ That's it! The script will:
 1. Clone this repository or copy its contents to your project:
 
 ```bash
-git clone https://gitlab.com/chirag-indapoint/react-hooks.git
+git clone https://github.com/chirag6451/react_hooks.git
 # or
-git clone git@gitlab.com:chirag-indapoint/react-hooks.git
+git clone git@github.com:chirag6451/react_hooks.git
 ```
 
 2. Install dependencies:
@@ -86,8 +86,8 @@ node setup.js
 1. Clone this repository to a temporary location:
 
 ```bash
-git clone https://gitlab.com/chirag-indapoint/react-hooks.git
-cd react-hooks
+git clone https://github.com/chirag6451/react_hooks.git
+cd react_hooks
 ```
 
 2. Run the install-to-project script, pointing to your existing project:
@@ -108,14 +108,14 @@ Or navigate to your project directory first, then run:
 
 ```bash
 # For macOS/Linux
-node /path/to/react-hooks/install-to-project.js
+node /path/to/react_hooks/install-to-project.js
 # or
-/path/to/react-hooks/install-mac.sh
+/path/to/react_hooks/install-mac.sh
 
 # For Windows
-/path/to/react-hooks/install-windows.bat
+/path/to/react_hooks/install-windows.bat
 # or
-/path/to/react-hooks/install-windows.ps1
+/path/to/react_hooks/install-windows.ps1
 ```
 
 This will:
@@ -149,7 +149,7 @@ The `prepare` script will automatically set up Husky and the Git hooks.
 For macOS/Linux users, share this one-line command:
 
 ```bash
-curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/curl-install.sh -o install.sh && bash install.sh
+curl -fsSL https://raw.githubusercontent.com/chirag6451/react_hooks/main/curl-install.sh -o install.sh && bash install.sh
 ```
 
 Team members just need to run this command in their React project directory.
@@ -174,21 +174,21 @@ Share the repository with your team and have them run:
 
 ```bash
 # Clone the hooks repository
-git clone https://gitlab.com/chirag-indapoint/react-hooks.git
+git clone https://github.com/chirag6451/react_hooks.git
 
 # Navigate to an existing project
 cd /path/to/existing/project
 
 # Install the hooks
 # For macOS/Linux
-node /path/to/react-hooks/install-to-project.js
+node /path/to/react_hooks/install-to-project.js
 # or
-/path/to/react-hooks/install-mac.sh
+/path/to/react_hooks/install-mac.sh
 
 # For Windows
-/path/to/react-hooks/install-windows.bat
+/path/to/react_hooks/install-windows.bat
 # or
-/path/to/react-hooks/install-windows.ps1
+/path/to/react_hooks/install-windows.ps1
 ```
 
 ## How It Works
