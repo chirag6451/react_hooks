@@ -291,10 +291,6 @@ The hooks perform four main functions:
 
 Before each commit/push, the hook:
 
-<div align="center">
-<img src="https://mermaid.ink/img/pako:eNptkU1PwzAMhv9KlBMgTWq7wQE-DhwQEhI7wIVLaJzS0DYZSQZDiP9OnG5lRb4kfvz6tZ1jZo1FxjnbOtx6fELTIXwqXGvVQYNGdqjhWlmLGnZKt3BRqwZu1UbCRfKZJJ_JRRKlIoGVMuJFdWjgTnUCXpVu4Vk1Qr5IeJA7AQ-yE_CkWiHXqhWwVK2QG9kJeJSdkM9qI-C77IR8UZ2QL6oV8F1tBHxTrZBvqhPwQ3VCPqtGyGfVCnhVnZBPqhXwQ3VCvqpWwLPaCPimWgE_VSfkRrUCblUn5JNqhHxVrYBn1Qn5rFohP1Qn5JtqBfxSGyHXqhXwR3VCbmQr5I_aCnhXnZBb1Qr5qzZCvqtWwF-1FfJPdUL-qVbAf9UJ-a82Qm5VK-Sf2gr5rzohd6oV8qA6IX_URsit2gp5UJ2Qe9UKuVedkAfVCXlUGyGPqhXyqDohT6oV8qQ6IU-qFfKkOiFPaiPkSbVCnlQr5El1Qp5UK-RJdUL-A_GbyQA?type=png" alt="gitignore Check Flow" width="600">
-</div>
-
 1. Scans your repository for sensitive patterns that should be in `.gitignore`
 2. If any are missing, automatically adds them to your `.gitignore` file
 3. Adds the updated `.gitignore` to your commit
@@ -310,10 +306,6 @@ The check includes patterns for:
 
 After the gitignore check, the hook:
 
-<div align="center">
-<img src="https://mermaid.ink/img/pako:eNplkk9PAjEQxb_KpCcSEtndBS_qwYMxMTHxYLyQdgfYuG1XOouGEL67U-yfRU_NvPfLTKedY2WtQ8Y5O3jcBXxE2yN8KNw43UOLVvao4Vo5hxr2ynRwUesWbtRWwkXymSSfyUUSZSKBlTLiRfVo4U71Al6V6eBZtUK-SHiQewEPshfwpDohn1Qn5Eq1Qq5VL-BR9kI-q62A77IX8kX1Qr6oTshX1Qn5pnYCvqteyDfVC_mheiGf1VbAZ9UJ-aQ6IV9VL-SL6oV8VZ2Qb2or4JvqhXxXvZAfqhfyWW0FfFadkE-qE_JVdUK-q17IN9UL-aF6Id_VVsB3tRPyQ_VCfqpeyC-1FfBLdUL+qE7IL9UJ-a16Ib_VVsBvtRPyR/VCfqteyB-1FfBH7YT8Vb2Qf2or4J_aCfmveiH_VS_kQW0FPKhOyIPqhTyoXsij2gp4VDshj6oX8qh6IY9qK-v2qDohj6oT8qQ6IU-qF_KktkKeVCfkSXVCnlQv5EntBDypXsiT6oU8qa2AJ9UJeVKdkCfVC3lSvZAn1Qn5D5VV2Gg?type=png" alt="React Build Check Flow" width="600">
-</div>
-
 1. Finds all React applications in your repository by scanning for package.json files with React dependencies
 2. For each React app, runs either `npm run build:dev` or `npm run build` (preferring build:dev if available)
 3. If any build fails, prevents the commit/push with a helpful error message
@@ -322,20 +314,12 @@ After the gitignore check, the hook:
 
 After the build check, the hook:
 
-<div align="center">
-<img src="https://mermaid.ink/img/pako:eNp9kU1PwzAMhv9KlBMgTWq7wQE-DhwQEhI7wIVLaJzS0DYZSQZDiP9OnG5lRb4kfvz6tZ1jZo1FxjnbOtx6fELTIXwqXGvVQYNGdqjhWlmLGnZKt3BRqwZu1UbCRfKZJJ_JRRKlIoGVMuJFdWjgTnUCXpVu4Vk1Qr5IeJA7AQ-yE_CkWiHXqhWwVK2QG9kJeJSdkM9qI-C77IR8UZ2QL6oV8F1tBHxTrZBvqhPwQ3VCPqtGyGfVCnhVnZBPqhXwQ3VCvqpWwLPaCPimWgE_VSfkRrUCblUn5JNqhHxVrYBn1Qn5rFohP1Qn5JtqBfxSGyHXqhXwR3VCbmQr5I_aCnhXnZBb1Qr5qzZCvqtWwF-1FfJPdUL-qVbAf9UJ-a82Qm5VK-Sf2gr5rzohd6oV8qA6IX_URsit2gp5UJ2Qe9UKuVedkAfVCXlUGyGPqhXyqDohT6oV8qQ6IU-qFfKkOiFPaiPkSbVCnlQr5El1Qp5UK-RJdUL-A_GbyQA?type=png" alt="Lowercase Enforcement Flow" width="600">
-</div>
-
 1. Scans your repository for file names and import statements that do not use lowercase
 2. If any are found, provides helpful warnings but allows the commit to proceed
 
 ### 4. Git Reminders
 
 The Git reminder feature:
-
-<div align="center">
-<img src="https://mermaid.ink/img/pako:eNp1ksFOwzAMhl8lygmQJrXdYAc2DhwQEhI7wIVLaJzS0DYZSQZDiHfHaTfWFfmS-Pf3x3aOmTUWGeds63Dr8QlNh_CpcK1VBw0a2aGGa2UtathJ3cJFrRq4VRsJF8lnknwmF0mUigRWyogX1aGBO9UJeFW6hWfVCPki4UHuBDzITsCTaoVcq1bAUrVCbmQn4FF2Qj6rjYDvshPyRXVCvqhWwHe1EfBNtUK-qU7AD9UJ-awaIZ9VK-BVdUI-qVbAD9UJ-apaAc9qI-CbagX8VJ2QG9UKuFWdkE-qEfJVtQKeVSfks2qF_FCdkG-qFfBLbYRcq1bAH9UJuZGtkD9qK-BddUJuVSvkr9oI-a5aAX_VVsg_1Qn5p1oB_1Un5L_aCLlVrZB_aivkv-qE3KlWyIPqhPxRGyG3aivkQXVC7lUr5F51Qh5UJ-RRbYQ8qlbIo-qEPKlWyJPqhDypVsiT6oQ8qY2QJ9UKeVKtkCfVCXlSrZAn1Qn5D_GbyQA?type=png" alt="Git Reminder Flow" width="600">
-</div>
 
 1. Checks for uncommitted changes in your repository
 2. Notifies how long it's been since your last commit
