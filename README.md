@@ -10,6 +10,29 @@ This repository contains Git hooks that enforce running build commands for React
 - Checks and updates .gitignore to include sensitive files and directories
 - Easy to install and distribute to your team
 
+## Quick Installation (Windows)
+
+### One-Click Installation
+
+For Windows users, we provide one-click installers that make setup extremely simple:
+
+#### Using Batch Script
+1. Download the `one-click-install.bat` file
+2. Navigate to your React project in File Explorer
+3. Double-click the `one-click-install.bat` file
+
+#### Using PowerShell
+1. Download the `one-click-install.ps1` file
+2. Right-click and select "Run with PowerShell"
+   - Or open PowerShell, navigate to your project, and run `.\one-click-install.ps1`
+
+That's it! The script will:
+- Check prerequisites (Node.js, Git, package.json)
+- Clone the repository to a temporary location
+- Install all necessary files and scripts
+- Set up the Git hooks
+- Clean up temporary files
+
 ## Installation Options
 
 ### Option 1: For a New Project
@@ -17,8 +40,9 @@ This repository contains Git hooks that enforce running build commands for React
 1. Clone this repository or copy its contents to your project:
 
 ```bash
-git clone https://github.com/yourusername/react-build-hooks.git
-# or copy the files manually
+git clone https://gitlab.com/chirag-indapoint/react-hooks.git
+# or
+git clone git@gitlab.com:chirag-indapoint/react-hooks.git
 ```
 
 2. Install dependencies:
@@ -30,7 +54,13 @@ npm install
 3. Run the setup script:
 
 ```bash
+# For macOS/Linux
 node setup.js
+
+# For Windows
+.\install-windows.bat
+# or
+.\install-windows.ps1
 ```
 
 ### Option 2: Adding to an Existing Project
@@ -38,20 +68,32 @@ node setup.js
 1. Clone this repository to a temporary location:
 
 ```bash
-git clone https://github.com/yourusername/react-build-hooks.git
-cd react-build-hooks
+git clone https://gitlab.com/chirag-indapoint/react-hooks.git
+cd react-hooks
 ```
 
 2. Run the install-to-project script, pointing to your existing project:
 
 ```bash
+# For macOS/Linux
 node install-to-project.js /path/to/your/project
+
+# For Windows
+.\install-windows.bat
+# or
+.\install-windows.ps1
 ```
 
 Or navigate to your project directory first, then run:
 
 ```bash
-node /path/to/react-build-hooks/install-to-project.js
+# For macOS/Linux
+node /path/to/react-hooks/install-to-project.js
+
+# For Windows
+/path/to/react-hooks/install-windows.bat
+# or
+/path/to/react-hooks/install-windows.ps1
 ```
 
 This will:
@@ -86,14 +128,26 @@ Share the repository with your team and have them run:
 
 ```bash
 # Clone the hooks repository
-git clone https://github.com/yourusername/react-build-hooks.git
+git clone https://gitlab.com/chirag-indapoint/react-hooks.git
 
 # Navigate to an existing project
 cd /path/to/existing/project
 
 # Install the hooks
-node /path/to/react-build-hooks/install-to-project.js
+node /path/to/react-hooks/install-to-project.js
+# or for Windows users
+/path/to/react-hooks/install-windows.bat
+# or
+/path/to/react-hooks/install-windows.ps1
 ```
+
+### Method 3: Share the One-Click Installers (Windows)
+
+For Windows users, you can simply share the one-click installer files:
+- `one-click-install.bat` (Batch script)
+- `one-click-install.ps1` (PowerShell script)
+
+Team members just need to place these files in their React project directory and double-click to run.
 
 ## How It Works
 
@@ -135,6 +189,15 @@ git commit --no-verify
 # or
 git push --no-verify
 ```
+
+### Windows-Specific Issues
+
+- **Script Execution Policy**: If PowerShell scripts fail to run, you may need to adjust your execution policy:
+  ```powershell
+  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+  ```
+
+- **Permission Issues**: Try running the scripts as Administrator if you encounter permission problems
 
 ## Requirements
 
