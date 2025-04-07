@@ -10,9 +10,25 @@ This repository contains Git hooks that enforce running build commands for React
 - Checks and updates .gitignore to include sensitive files and directories
 - Easy to install and distribute to your team
 
-## Quick Installation (Windows)
+## Quick Installation
 
-### One-Click Installation
+### One-Line Installation (macOS/Linux)
+
+For the quickest installation, run this command in your project directory:
+
+```bash
+curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/curl-install.sh | bash
+```
+
+This will download and install everything you need without having to clone the repository.
+
+### One-Click Installation (macOS/Linux)
+
+1. Download the `one-click-install.sh` file
+2. Make it executable: `chmod +x one-click-install.sh`
+3. Run it: `./one-click-install.sh`
+
+### One-Click Installation (Windows)
 
 For Windows users, we provide one-click installers that make setup extremely simple:
 
@@ -56,6 +72,8 @@ npm install
 ```bash
 # For macOS/Linux
 node setup.js
+# or
+./install-mac.sh
 
 # For Windows
 .\install-windows.bat
@@ -77,6 +95,8 @@ cd react-hooks
 ```bash
 # For macOS/Linux
 node install-to-project.js /path/to/your/project
+# or
+./install-mac.sh /path/to/your/project
 
 # For Windows
 .\install-windows.bat
@@ -89,6 +109,8 @@ Or navigate to your project directory first, then run:
 ```bash
 # For macOS/Linux
 node /path/to/react-hooks/install-to-project.js
+# or
+/path/to/react-hooks/install-mac.sh
 
 # For Windows
 /path/to/react-hooks/install-windows.bat
@@ -122,7 +144,31 @@ Once you've added these hooks to your project, team members will automatically g
 
 The `prepare` script will automatically set up Husky and the Git hooks.
 
-### Method 2: Share as a Separate Tool
+### Method 2: Share the One-Line Installer (macOS/Linux)
+
+For macOS/Linux users, share this one-line command:
+
+```bash
+curl -fsSL https://gitlab.com/chirag-indapoint/react-hooks/-/raw/main/curl-install.sh | bash
+```
+
+Team members just need to run this command in their React project directory.
+
+### Method 3: Share the One-Click Installers
+
+#### For macOS/Linux Users
+Share the `one-click-install.sh` file. Team members need to:
+1. Make it executable: `chmod +x one-click-install.sh`
+2. Run it: `./one-click-install.sh`
+
+#### For Windows Users
+Share these files:
+- `one-click-install.bat` (Batch script)
+- `one-click-install.ps1` (PowerShell script)
+
+Team members just need to place these files in their React project directory and double-click to run.
+
+### Method 4: Share as a Separate Tool
 
 Share the repository with your team and have them run:
 
@@ -134,20 +180,16 @@ git clone https://gitlab.com/chirag-indapoint/react-hooks.git
 cd /path/to/existing/project
 
 # Install the hooks
+# For macOS/Linux
 node /path/to/react-hooks/install-to-project.js
-# or for Windows users
+# or
+/path/to/react-hooks/install-mac.sh
+
+# For Windows
 /path/to/react-hooks/install-windows.bat
 # or
 /path/to/react-hooks/install-windows.ps1
 ```
-
-### Method 3: Share the One-Click Installers (Windows)
-
-For Windows users, you can simply share the one-click installer files:
-- `one-click-install.bat` (Batch script)
-- `one-click-install.ps1` (PowerShell script)
-
-Team members just need to place these files in their React project directory and double-click to run.
 
 ## How It Works
 
@@ -189,6 +231,13 @@ git commit --no-verify
 # or
 git push --no-verify
 ```
+
+### macOS/Linux-Specific Issues
+
+- **Permission Issues**: If you get "Permission denied" errors, make sure the scripts are executable:
+  ```bash
+  chmod +x install-mac.sh one-click-install.sh
+  ```
 
 ### Windows-Specific Issues
 
